@@ -19,7 +19,8 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
 
     for line in lines:
         if line[:5:] == "MODEL":
-            dico_molecule=line[13:].strip()
+            
+            dico_molecule=line[10:14].strip()
             dico_models[dico_molecule] = {} 
             dico_models[dico_molecule]["chains"] = []
             
@@ -37,7 +38,7 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
                 dico_models[dico_molecule][chain][res] = {}
                 dico_models[dico_molecule][chain][res]["atomlist"]=[]
             
-            atom = line[13:16]
+            atom = line[13:16].strip()
             dico_models[dico_molecule][chain][res]["atomlist"].append(atom)
             dico_models[dico_molecule][chain][res][atom] = {}
     
@@ -73,21 +74,25 @@ def Distance_res_min(dico1,dico2):   #Mode de calcul 1 : distance la plus courte
     print(min)
     return(min)
 
+
 def CM(listx,listy,listz):
     x=sum(listx)/float(len(listx))
     y=sum(listy)/float(len(listy))
     z=sum(listz)/float(len(listy))
     coords=[x,y,z]
     return coords
+   
     
 def Distance(x1,y1,z1,x2,y2,z2): #Calcule la distance entre deux points
     return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
+
 
 def RMSD(list_delta): #calcul de RMSD
     distcarre=[]
     for delta in list_delta:
         distcarre.append(delta**2)
     return (sqrt((sum(distcarre))/float(len(list_delta))))
+
 
 def giration(dico):#c'est le dico[key] qu'on passe ici
     listCMres=[] #list permet de stocker le centre de masse de chaque residu
@@ -111,7 +116,32 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
     list_dist=[]
     for xyz in listCMres:
         list_dist.append(Distance(CMprot[0],CMprot[1],CMprot[2],xyz[0],xyz[1],xyz[2]))
-    return max(list_dist)   
+    return max(list_dist)  
+
+    
+def writefile_glob():
+    if os.path.isdir(path): #si le chemin est vers un dossier
+        out=open("%s/PythonProgResults/output_analyse_global_%s"%(path,fichier),"w")
+    else: #si le chemin est vers un fichier
+        out=open("%s/PythonProgResults/output_analyse_global_%s"%(os.path.dirname(path),os.path.basename(fichier)),"w")
+    
+    #ecrire la structure d'origine
+    with open(fichier, "r") as filin:
+        line=filin.readline()
+        while line != "ENDMDL\n":
+            line=filin.next()
+            out.write(line)
+    filin.close()
+    
+    #ecrire dans l'ordre les resultats de la comparaison des conformations avec la structure d'origine
+    out.write("\nConformation \t Giration \t\t RMSD results\n")
+    for i in range(len(dico)):
+        out.write("\n%s: \t\t %.12f \t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
+        
+    out.close()
+
+
+
 
 if __name__ == '__main__':
     
@@ -136,10 +166,16 @@ if __name__ == '__main__':
     ########################################################
 
     #on supprime le dossier contenant les resultats de l'execution precedente (s'il existe) afin d'eviter les chevauchements
-    try:
-        shutil.rmtree("%s/PythonProgResults"%os.path.dirname(path)) 
-    except OSError:
-        pass
+    #le dossier PythonProgResults sert a stocker les fichiers sortis
+    if os.path.isdir(path): # si le chemin est vers un dossier
+        shutil.rmtree("%s/PythonProgResults"%path) 
+        os.mkdir("%s/PythonProgResults"%path)
+    else: #si le chemin est vers un fichier
+        try:
+            shutil.rmtree("%s/PythonProgResults"%os.path.dirname(path)) #si le path est vers un fichier
+            os.mkdir("%s/PythonProgResults"%os.path.dirname(path))
+        except:
+            os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) 
     
     try:
         os.chdir(path)
@@ -153,9 +189,11 @@ if __name__ == '__main__':
 
     if (analyse == "global"):
         for fichier in fichiers:
+            print "Parsing:",fichier
             dico=ParsingPDB(fichier)
             
             #calcul RMSD de chaque conformation par rapport a la structure d'origine
+            #et aussi calcul du rayon de giration de chaque conformation
             dico_RMSD={}
             dico_Giration={}
             for key in dico:
@@ -163,36 +201,20 @@ if __name__ == '__main__':
                 dico_Giration[key]=giration(dico[key])
                 for chain in dico[key]["chains"]:
                     for res in dico[key][chain]["reslist"]:
-                        list_delta.append(Distance(float(dico[key][chain][res]['CA ']['x']),float(dico[key][chain][res]['CA ']['y']),float(dico[key][chain][res]['CA ']['z']),float(dico['0'][chain][res]['CA ']['x']),float(dico['0'][chain][res]['CA ']['y']),float(dico['0'][chain][res]['CA ']['z']))) # compare dist entre les Ca         
+                        list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca         
                 dico_RMSD[key]=RMSD(list_delta)
+            writefile_glob()
             
-    elif (analyse == "local"):
-        for fichier in fichiers:
-            #do sth
-    else :
-        for fichier in fichiers:
-            #do sth
-    #########################################################
-    #            Ecrire les fichiers de sortie
-    #########################################################
+            
+    #~ elif (analyse == "local"):
+        #~ for fichier in fichiers:
+            #~ #do sth
+    #~ else :
+        #~ for fichier in fichiers:
+            #~ #do sth
+            
     
-    os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
-    out=open("%s/PythonProgResults/output_analyse_global"%os.path.dirname(path),"w")
     
-    #ecrire la structure d'origine
-    with open(fichier, "r") as filin:
-        line=filin.readline()
-        while line != "ENDMDL\n":
-            line=filin.next()
-            out.write(line)
-    filin.close()
-    
-    #ecrire dans l'ordre les resultats du RMSD de la comparaison des conformations avec la structure d'origine
-    out.write("\nConformation \t Giration \t\t RMSD results\n")
-    for i in range(len(dico)):
-        out.write("\n%s: \t\t %.12f \t\t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
-        
-    out.close()
 
 
      
