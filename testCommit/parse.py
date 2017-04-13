@@ -73,45 +73,6 @@ def Distance_res_min(dico1,dico2):   #Mode de calcul 1 : distance la plus courte
     print(min)
     return(min)
 
-
-def Distance_res_masse(dico1,dico2):
-     #Mode de calcul 2 : entre les centres de masse
-     #x,y, et z sont les coordoonnees du centre
-     #Dico1 et 2 sont des dicos de residus
-            
-    
-    #1.definir les coordonnes du centre de masse X,Y,Z
-    x=0
-    y=0
-    z=0
-    
-    X=0
-    Y=0
-    Y=0
-    cpt=0
-    distance=0
-    distance2=0
-    #Les coordonnees se definissent comme une moyenne des coordonnees des 2 residus
-    for atom1 in dico1['atomlist']:
-        coor1=[dico1[atom1]["x"],dico1[atom1]["y"],dico1[atom1]["z"]]
-        for atom2 in dico2["atomlist"] :
-            coor2=[dico2[atom2]["x"],dico2[atom2]["y"],dico2[atom2]["z"]]
-            #On fait la somme des coordonnees de tous les atomes
-            x=[float(coor1[0]),float(coor2[0])]
-            y=[float(coor1[1]),float(coor2[1])]
-            z=[float(coor1[2]),float(coor2[2])]
-            
-            centre=CM(x,y,z)
-            #3. Calculer la distance entre les residus et le centre de masse
-            distance=Distance(float(coor1[0]),float(coor1[1]),float(coor1[2]),centre[0],centre[1],centre[2])
-            distance2=Distance(float(coor2[0]),float(coor2[1]),float(coor2[2]),centre[0],centre[1],centre[2])
-        print("d1=")
-        print(distance)
-        print("d2=")
-        print(distance2)
-    return(distance)
-
-# je propose qu'on fasse une fonction de calcul du centre de masse comme ci-dessous, je trouve que c'est plus simple et plus general
 def CM(listx,listy,listz):
     x=sum(listx)/float(len(listx))
     y=sum(listy)/float(len(listy))
@@ -128,21 +89,29 @@ def RMSD(list_delta): #calcul de RMSD
         distcarre.append(delta**2)
     return (sqrt((sum(distcarre))/float(len(list_delta))))
 
-def giration(listx,listy,listz,dico1):
-    #Dapres ce que jai compris : cest la distance moyenne du centre dun nuage de point avec lensemble des points du nuages
-    
-    N =0#Nombre de residus totaux
-    somme=0
-    #1. Calcul de la distance entre le residus et le centre de masse
-    for atom in dico1['atomlist']:
-        coor=[float(dico1[atom]["x"]),float(dico1[atom]["y"]),float(dico1[atom]["z"])]
-        centre=CM(listx,listy,listz)
-        distance=Distance(coor[0],coor[1],coor[2],centre[0],centre[1],centre[2])
-        somme=somme+distance #On fait la somme de toutes les distances
-        N=N+1
-    #2. On retoune la racine de la moyenne de toutes ces distances au carres
-    return (sqrt((1/N)*sum**2))
-
+def giration(dico):#c'est le dico[key] qu'on passe ici
+    listCMres=[] #list permet de stocker le centre de masse de chaque residu
+    globx=[] #list permet de stocker le x de tous les atomes d'une prot
+    globy=[]
+    globz=[]
+    for chain in dico["chains"]:
+        for res in dico[chain]["reslist"]:
+            listx=[]
+            listy=[]
+            listz=[]
+            for atom in dico[chain][res]["atomlist"]:
+                listx.append(float(dico[chain][res][atom]['x']))
+                listy.append(float(dico[chain][res][atom]['y']))
+                listz.append(float(dico[chain][res][atom]['z'])) 
+            globx.extend(listx)
+            globy.extend(listy)
+            globz.extend(listz)
+            listCMres.append(CM(listx,listy,listz))
+    CMprot=CM(globx,globy,globz)
+    list_dist=[]
+    for xyz in listCMres:
+        list_dist.append(Distance(CMprot[0],CMprot[1],CMprot[2],xyz[0],xyz[1],xyz[2]))
+    return max(list_dist)   
 
 if __name__ == '__main__':
     
@@ -177,7 +146,6 @@ if __name__ == '__main__':
         fichiers=glob.iglob("*.pdb") # si le path est vers un dossier, on lira tous les fichiers pdb
     except OSError:
         fichiers=glob.iglob("%s"%path) # si le path est vers un fichier, on lira ce ficher
-        pass
 
     #########################################################
     #                       Main
@@ -189,37 +157,40 @@ if __name__ == '__main__':
             
             #calcul RMSD de chaque conformation par rapport a la structure d'origine
             dico_RMSD={}
+            dico_Giration={}
             for key in dico:
                 list_delta=[]
+                dico_Giration[key]=giration(dico[key])
                 for chain in dico[key]["chains"]:
                     for res in dico[key][chain]["reslist"]:
-                        list_delta.append(Distance(float(dico[key][chain][res]['CA ']['x']),float(dico[key][chain][res]['CA ']['y']),float(dico[key][chain][res]['CA ']['z']),float(dico['0'][chain][res]['CA ']['x']),float(dico['0'][chain][res]['CA ']['y']),float(dico['0'][chain][res]['CA ']['z']))) # compare dist entre les Ca
-                coords=RMSD(list_delta)
-                dico_RMSD[key]=coords
+                        list_delta.append(Distance(float(dico[key][chain][res]['CA ']['x']),float(dico[key][chain][res]['CA ']['y']),float(dico[key][chain][res]['CA ']['z']),float(dico['0'][chain][res]['CA ']['x']),float(dico['0'][chain][res]['CA ']['y']),float(dico['0'][chain][res]['CA ']['z']))) # compare dist entre les Ca         
+                dico_RMSD[key]=RMSD(list_delta)
             
     elif (analyse == "local"):
         for fichier in fichiers:
-            do sth
+            #do sth
     else :
         for fichier in fichiers:
-            do sth
+            #do sth
     #########################################################
     #            Ecrire les fichiers de sortie
     #########################################################
     
     os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
     out=open("%s/PythonProgResults/output_analyse_global"%os.path.dirname(path),"w")
+    
+    #ecrire la structure d'origine
     with open(fichier, "r") as filin:
         line=filin.readline()
         while line != "ENDMDL\n":
             line=filin.next()
             out.write(line)
     filin.close()
-    out.write("\nRMSD results\n")
     
+    #ecrire dans l'ordre les resultats du RMSD de la comparaison des conformations avec la structure d'origine
+    out.write("\nConformation \t Giration \t\t RMSD results\n")
     for i in range(len(dico)):
-        print i
-        out.write("\nconformation %s: %s"%(i,dico_RMSD["%s"%i]))
+        out.write("\n%s: \t\t %.12f \t\t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
         
     out.close()
 
