@@ -2,59 +2,54 @@
 #-*- coding : utf8 -*-
 
 """
-Contact: 
-Date: 06/03/2017
-Description: 
-- A function parsing a PDB file into a dictionary
+Author : LesBellesGosses
+Date : 12/04/2017
+Description : Projet Barstar
 """
+
 from math import sqrt
 import numpy
 
 def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
    
     infile = open(pdbFile, "r")
-    lines = infile.readlines() 
+    lines = infile.readlines()
 
-    dico_molecule = {}									
-    chainList = []
-    rList = []
+    dico_models={} # une cle associee a chaque conformation de la molecule
 
-    print("ok")
     for line in lines:
-        if line[:4:] == 'ATOM':						
+        if line[:5:] == "MODEL":
+            dico_molecule=line[13:].strip()
+            dico_models[dico_molecule] = {} 
+            dico_models[dico_molecule]["chains"] = []
+            
+        if line[:4:] == 'ATOM':                     
         
-            chaine = line[21]
-            if chaine not in chainList:
-                chainList.append(chaine)
-                dico_molecule[chaine] = {}
-                resList=[]
+            chain = line[21]
+            if chain not in dico_models[dico_molecule].keys():
+                dico_models[dico_molecule][chain] = {}
+                dico_models[dico_molecule]["chains"].append(chain)
+                dico_models[dico_molecule][chain]["reslist"]=[]
         
             res = line[23:26]
-            if res not in resList :
-                resList.append(res)
-                dico_molecule[chaine][res] = {}
-                atomList=[]
-                rList=[]
+            if res not in dico_models[dico_molecule][chain].keys() :
+                dico_models[dico_molecule][chain]["reslist"].append(res)
+                dico_models[dico_molecule][chain][res] = {}
+                dico_models[dico_molecule][chain][res]["atomlist"]=[]
             
             atom = line[13:16]
-            if atom not in atomList:
-                atomList.append(atom)
-                dico_molecule[chaine][res][atom] = {}
-            
-            if line[17:20] not in rList:
-                rList.append(line[17:20])
+            dico_models[dico_molecule][chain][res]["atomlist"].append(atom)
+            dico_models[dico_molecule][chain][res][atom] = {}
     
-            dico_molecule[chaine][res][atom]['x'] = line[31:38]
-            dico_molecule[chaine][res][atom]['y'] = line[39:46]
-            dico_molecule[chaine][res][atom]['z'] = line[47:54]
-            dico_molecule[chaine][res][atom]['id'] = line[7:11]
+            dico_models[dico_molecule][chain][res][atom]['x'] = line[31:38]
+            dico_models[dico_molecule][chain][res][atom]['y'] = line[39:46]
+            dico_models[dico_molecule][chain][res][atom]['z'] = line[47:54]
+            dico_models[dico_molecule][chain][res][atom]['id'] = line[7:11]
         
-            dico_molecule[chaine][res]['resname'] = rList
-            dico_molecule[chaine]['reslist'] = resList
-            dico_molecule[chaine][res]['atomlist'] = atomList
+            dico_models[dico_molecule][chain][res]['resname'] = line[17:20]
         
     infile.close()
-    return(dico_molecule)
+    return(dico_models)
 
 
 #Calcule de la distance entre 2 residus selon 2 methodes de calcule:
@@ -120,13 +115,87 @@ def Distance_res_masse(dico1,dico2):
         print("d2=")
         print(distance2)
     return(distance)
+
+# je propose qu'on fasse une fonction de calcul du centre de masse comme ci-dessous, je trouve que c'est plus simple et plus general
+def CM(listx,listy,listz):
+    x=sum(listx)/float(len(listx))
+    y=sum(listy)/float(len(listy))
+    z=sum(listz)/float(len(listy))
+    coords=[x,y,z]
+    return coords
     
 def Distance(x1,y1,z1,x2,y2,z2): #Calcule la distance entre deux points
     return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
 
+def RMSD(list_delta): #calcul de RMSD
+    distcarre=[]
+    for delta in list_delta:
+        distcarre.append(delta**2)
+    return (sqrt((sum(distcarre))/float(len(list_delta))))
+    
 
 if __name__ == '__main__':
-    res1=ParsingPDB("/Users/mathildebertrand/Desktop/M1-S2/python/tp3/Documents/arginine.pdb")
-    res2=ParsingPDB("/Users/mathildebertrand/Desktop/M1-S2/python/tp3/Documents/arginine.pdb")
-    #Distance_res_min(res1['A'][' -3'],res2['A'][' -3'])
-    Distance_res_masse(res1['A'][' -3'],res2['A'][' -3'])
+    
+    import argparse,os,glob,shutil,sys
+
+    ########################################################
+    #                   Arguments
+    ########################################################
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", help="Path to directory where pdb files are stored or Path to PDB file") 
+    parser.add_argument("-a", help="Type of analysis: global or local or both")
+    args = parser.parse_args()
+    if args.p == None or args.a == None: # si l'un des arguments est vide
+        parser.print_help()
+        parser.exit()
+    path=args.p
+    analyse=args.a
+
+    ########################################################
+    #               Etapes preliminaires
+    ########################################################
+
+    #on supprime le dossier contenant les resultats de l'execution precedente (s'il existe) afin d'eviter les chevauchements
+    try:
+        shutil.rmtree("%s/PythonProgResults"%os.path.dirname(path)) 
+    except OSError:
+        pass
+    
+    try:
+        os.chdir(path)
+        fichiers=glob.iglob("*.pdb") # si le path est vers un dossier, on lira tous les fichiers pdb
+    except OSError:
+        fichiers=glob.iglob("%s"%path) # si le path est vers un fichier, on lira ce ficher
+        pass
+
+    #########################################################
+    #                       Main
+    #########################################################
+    
+    os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
+
+    if analyse == "global":
+        for fichier in fichiers:
+            dico=ParsingPDB(fichier)
+            
+            #calcul RMSD de chaque conformation par rapport a la structure d'origine
+            list_RMSD=[]
+            for key in dico:
+                list_delta=[]
+                for chain in dico[key]["chains"]:
+                    for res in dico[key][chain]["reslist"]:
+                        for atom in dico[key][chain][res]["atomlist"]:
+                            list_delta.append(Distance(float(dico[key][chain][res][atom]['x']),float(dico[key][chain][res][atom]['y']),float(dico[key][chain][res][atom]['z']),float(dico['0'][chain][res][atom]['x']),float(dico['0'][chain][res][atom]['y']),float(dico['0'][chain][res][atom]['z'])))
+                coords=RMSD(list_delta)
+                list_RMSD.append(coords)
+            print list_RMSD
+            
+    elif analyse == "local":
+        for fichier in fichiers:
+            #do sth
+    else:
+        for fichier in fichiers:
+            #do sth
+
+     
