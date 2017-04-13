@@ -97,21 +97,16 @@ def Distance_res_masse(dico1,dico2):
         for atom2 in dico2["atomlist"] :
             coor2=[dico2[atom2]["x"],dico2[atom2]["y"],dico2[atom2]["z"]]
             #On fait la somme des coordonnees de tous les atomes
-            x=float(coor1[0])+float(coor2[0])
-            y=float(coor1[1])+float(coor2[1])
-            z=float(coor1[2])+float(coor2[2])
-            cpt=cpt+1 
-           
-            X=x/cpt #On divise par le nombre d'atomes
-            Y=y/cpt
-            Z=z/cpt
+            x=[float(coor1[0]),float(coor2[0])]
+            y=[float(coor1[1]),float(coor2[1])]
+            z=[float(coor1[2]),float(coor2[2])]
             
+            centre=CM(x,y,z)
             #3. Calculer la distance entre les residus et le centre de masse
-            distance=Distance(float(coor1[0]),float(coor1[1]),float(coor1[2]),X,Y,Z)
-            distance2=Distance(float(coor2[0]),float(coor2[1]),float(coor2[2]),X,Y,Z)
+            distance=Distance(float(coor1[0]),float(coor1[1]),float(coor1[2]),centre[0],centre[1],centre[2])
+            distance2=Distance(float(coor2[0]),float(coor2[1]),float(coor2[2]),centre[0],centre[1],centre[2])
         print("d1=")
         print(distance)
-            
         print("d2=")
         print(distance2)
     return(distance)
@@ -132,7 +127,22 @@ def RMSD(list_delta): #calcul de RMSD
     for delta in list_delta:
         distcarre.append(delta**2)
     return (sqrt((sum(distcarre))/float(len(list_delta))))
+
+def giration(listx,listy,listz,dico1):
+    #Dapres ce que jai compris : cest la distance moyenne du centre dun nuage de point avec lensemble des points du nuages
     
+    N =0#Nombre de residus totaux
+    somme=0
+    #1. Calcul de la distance entre le residus et le centre de masse
+    for atom in dico1['atomlist']:
+        coor=[float(dico1[atom]["x"]),float(dico1[atom]["y"]),float(dico1[atom]["z"])]
+        centre=CM(listx,listy,listz)
+        distance=Distance(coor[0],coor[1],coor[2],centre[0],centre[1],centre[2])
+        somme=somme+distance #On fait la somme de toutes les distances
+        N=N+1
+    #2. On retoune la racine de la moyenne de toutes ces distances au carres
+    return (sqrt((1/N)*sum**2))
+
 
 if __name__ == '__main__':
     
@@ -173,9 +183,9 @@ if __name__ == '__main__':
     #                       Main
     #########################################################
     
-    os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
+    #os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
 
-    if analyse == "global":
+    if (analyse == "global"):
         for fichier in fichiers:
             dico=ParsingPDB(fichier)
             
@@ -189,13 +199,15 @@ if __name__ == '__main__':
                             list_delta.append(Distance(float(dico[key][chain][res][atom]['x']),float(dico[key][chain][res][atom]['y']),float(dico[key][chain][res][atom]['z']),float(dico['0'][chain][res][atom]['x']),float(dico['0'][chain][res][atom]['y']),float(dico['0'][chain][res][atom]['z'])))
                 coords=RMSD(list_delta)
                 list_RMSD.append(coords)
-            print list_RMSD
+            print (list_RMSD)
             
-    elif analyse == "local":
-        for fichier in fichiers:
+    #elif (analyse == "local"):
+     #   for fichier in fichiers:
+            #print(1)
             #do sth
-    else:
-        for fichier in fichiers:
+    #else :
+     #   for fichier in fichiers:
+      #      print(2)
             #do sth
 
      
