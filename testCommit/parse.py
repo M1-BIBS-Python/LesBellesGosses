@@ -182,32 +182,46 @@ if __name__ == '__main__':
     #########################################################
     #                       Main
     #########################################################
-    
-    #os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
 
     if (analyse == "global"):
         for fichier in fichiers:
             dico=ParsingPDB(fichier)
             
             #calcul RMSD de chaque conformation par rapport a la structure d'origine
-            list_RMSD=[]
+            dico_RMSD={}
             for key in dico:
                 list_delta=[]
                 for chain in dico[key]["chains"]:
                     for res in dico[key][chain]["reslist"]:
-                        for atom in dico[key][chain][res]["atomlist"]:
-                            list_delta.append(Distance(float(dico[key][chain][res][atom]['x']),float(dico[key][chain][res][atom]['y']),float(dico[key][chain][res][atom]['z']),float(dico['0'][chain][res][atom]['x']),float(dico['0'][chain][res][atom]['y']),float(dico['0'][chain][res][atom]['z'])))
+                        list_delta.append(Distance(float(dico[key][chain][res]['CA ']['x']),float(dico[key][chain][res]['CA ']['y']),float(dico[key][chain][res]['CA ']['z']),float(dico['0'][chain][res]['CA ']['x']),float(dico['0'][chain][res]['CA ']['y']),float(dico['0'][chain][res]['CA ']['z']))) # compare dist entre les Ca
                 coords=RMSD(list_delta)
-                list_RMSD.append(coords)
-            print (list_RMSD)
+                dico_RMSD[key]=coords
             
-    #elif (analyse == "local"):
-     #   for fichier in fichiers:
-            #print(1)
-            #do sth
-    #else :
-     #   for fichier in fichiers:
-      #      print(2)
-            #do sth
+    elif (analyse == "local"):
+        for fichier in fichiers:
+            do sth
+    else :
+        for fichier in fichiers:
+            do sth
+    #########################################################
+    #            Ecrire les fichiers de sortie
+    #########################################################
+    
+    os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) #ce dossier sert a stocker les fichiers sortis
+    out=open("%s/PythonProgResults/output_analyse_global"%os.path.dirname(path),"w")
+    with open(fichier, "r") as filin:
+        line=filin.readline()
+        while line != "ENDMDL\n":
+            line=filin.next()
+            out.write(line)
+    filin.close()
+    out.write("\nRMSD results\n")
+    
+    for i in range(len(dico)):
+        print i
+        out.write("\nconformation %s: %s"%(i,dico_RMSD["%s"%i]))
+        
+    out.close()
+
 
      
