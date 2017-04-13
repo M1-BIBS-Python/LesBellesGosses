@@ -32,7 +32,7 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
                 dico_models[dico_molecule]["chains"].append(chain)
                 dico_models[dico_molecule][chain]["reslist"]=[]
         
-            res = line[23:26]
+            res = line[23:26].strip()
             if res not in dico_models[dico_molecule][chain].keys() :
                 dico_models[dico_molecule][chain]["reslist"].append(res)
                 dico_models[dico_molecule][chain][res] = {}
@@ -94,11 +94,11 @@ def RMSD(list_delta): #calcul de RMSD
     return (sqrt((sum(distcarre))/float(len(list_delta))))
 
 
-def giration(dico):#c'est le dico[key] qu'on passe ici
-    listCMres=[] #list permet de stocker le centre de masse de chaque residu
+def CMglob(dico):#c'est le dico[key] qu'on passe ici
     globx=[] #list permet de stocker le x de tous les atomes d'une prot
     globy=[]
     globz=[]
+    glob={}
     for chain in dico["chains"]:
         for res in dico[chain]["reslist"]:
             listx=[]
@@ -111,11 +111,16 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
             globx.extend(listx)
             globy.extend(listy)
             globz.extend(listz)
-            listCMres.append(CM(listx,listy,listz))
-    CMprot=CM(globx,globy,globz)
+            glob["%s-%s"%(res,dico[chain][res]["resname"])]=CM(listx,listy,listz)
+    glob["prot"]=CM(globx,globy,globz)
+    return glob
+    
+    
+def giration(dico):#c'est le dico[key] qu'on passe ici
+    dico_CM=CMglob(dico)
     list_dist=[]
-    for xyz in listCMres:
-        list_dist.append(Distance(CMprot[0],CMprot[1],CMprot[2],xyz[0],xyz[1],xyz[2]))
+    for key in dico_CM.keys():
+        list_dist.append(Distance(dico_CM["prot"][0],dico_CM["prot"][1],dico_CM["prot"][2],dico_CM[key][0],dico_CM[key][1],dico_CM[key][2]))
     return max(list_dist)  
 
     
@@ -125,7 +130,7 @@ def writefile_glob():
     else: #si le chemin est vers un fichier
         out=open("%s/PythonProgResults/output_analyse_global_%s"%(os.path.dirname(path),os.path.basename(fichier)),"w")
     
-    #ecrire la structure d'origine
+    #ecrire la structure d'origine (il s'agit des lignes pour le modele 0)
     with open(fichier, "r") as filin:
         line=filin.readline()
         while line != "ENDMDL\n":
@@ -139,8 +144,21 @@ def writefile_glob():
         out.write("\n%s: \t\t %.12f \t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
         
     out.close()
+    
 
-
+def writefile_local():
+    if os.path.isdir(path): #si le chemin est vers un dossier
+        out=open("%s/PythonProgResults/output_analyse_local_%s"%(path,fichier),"w")
+    else: #si le chemin est vers un fichier
+        out=open("%s/PythonProgResults/output_analyse_local_%s"%(os.path.dirname(path),os.path.basename(fichier)),"w")
+        
+    for i in range(len(dico_dist)):
+		out.write("MODEL %s\n"%i)
+		out.write("Residu \t\t Distance\n")
+		for key in dico_dist["%s"%i].keys():
+			out.write("%s \t\t %.12f\n"%(key,dico_dist["%s"%i][key]))
+        
+    out.close()
 
 
 if __name__ == '__main__':
@@ -166,15 +184,16 @@ if __name__ == '__main__':
     ########################################################
 
     #on supprime le dossier contenant les resultats de l'execution precedente (s'il existe) afin d'eviter les chevauchements
-    #le dossier PythonProgResults sert a stocker les fichiers sortis
+    #le dossier "PythonProgResults" sert a stocker les fichiers sortis
+    
     if os.path.isdir(path): # si le chemin est vers un dossier
         shutil.rmtree("%s/PythonProgResults"%path) 
         os.mkdir("%s/PythonProgResults"%path)
     else: #si le chemin est vers un fichier
         try:
-            shutil.rmtree("%s/PythonProgResults"%os.path.dirname(path)) #si le path est vers un fichier
+            shutil.rmtree("%s/PythonProgResults"%os.path.dirname(path)) 
             os.mkdir("%s/PythonProgResults"%os.path.dirname(path))
-        except:
+        except: #s'il s'agit de la premiere execution
             os.mkdir("%s/PythonProgResults"%os.path.dirname(path)) 
     
     try:
@@ -187,7 +206,7 @@ if __name__ == '__main__':
     #                       Main
     #########################################################
 
-    if (analyse == "global"):
+    if (analyse == "global"): #si vous voulez seulement une analyse globale
         for fichier in fichiers:
             print "Parsing:",fichier
             dico=ParsingPDB(fichier)
@@ -203,13 +222,27 @@ if __name__ == '__main__':
                     for res in dico[key][chain]["reslist"]:
                         list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca         
                 dico_RMSD[key]=RMSD(list_delta)
-            writefile_glob()
+            writefile_glob()     
             
+    elif (analyse == "local"): #si vous voulez seulement une analyse locale
+        for fichier in fichiers:
+            print "Parsing:",fichier
+            dico=ParsingPDB(fichier)
             
-    #~ elif (analyse == "local"):
-        #~ for fichier in fichiers:
-            #~ #do sth
-    #~ else :
+            #dist de chaque residu de chaque conformation par rapport au CM de la prot
+            dico_dist={}
+            for key in dico: #pour chaque conformation
+                dico_Enfouissement=CMglob(dico[key])
+                dico_dist[key]={} #dico pour une conformation, dist de chaque residu de chaque conformation seront stockee dedans
+                for cle in dico_Enfouissement:
+					if cle != "prot":
+						dico_dist[key][cle]=Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[cle][0],dico_Enfouissement[cle][1],dico_Enfouissement[cle][2])
+
+            writefile_local()
+                
+            #RMSD moyen pour chaque residu de chaque conformations (a ajouter)
+                
+    #~ else : #si vous voulez a la fois une analyse globale et une analyse locale
         #~ for fichier in fichiers:
             #~ #do sth
             
