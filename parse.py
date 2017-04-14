@@ -6,9 +6,9 @@ Author : LesBellesGosses
 Date : 12/04/2017
 Description : Projet Barstar
 """
-
 from math import sqrt
-import numpy
+import matplotlib.pyplot as plt		
+import numpy as np
 
 def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
    
@@ -18,13 +18,14 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
     dico_models={} # une cle associee a chaque conformation de la molecule
 
     for line in lines:
-        if line[:5:] == "MODEL":
+		
+        if line[:5:] == "MODEL": #Si la ligne commence par MODEL,On rajoute le numero de conformation
             
-            dico_molecule=line[10:14].strip()
+            dico_molecule=line[9:14].strip()
             dico_models[dico_molecule] = {} 
             dico_models[dico_molecule]["chains"] = []
             
-        if line[:4:] == 'ATOM':                     
+        if line[:4:] == 'ATOM':                     #Si la ligne commence par ATOM
         
             chain = line[21]
             if chain not in dico_models[dico_molecule].keys():
@@ -48,14 +49,27 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
             dico_models[dico_molecule][chain][res][atom]['id'] = line[7:11]
         
             dico_models[dico_molecule][chain][res]['resname'] = line[17:20]
-        
+		
     infile.close()
     return(dico_models)
 
-
+def Temps (pdbFile): #Fonction qui lit les premieres lignes du fichier pdb et mets dans une liste les valeurs du temps
+	temps = []
+	
+	infile = open (pdbFile, "r")
+	lines = infile.readlines()
+    
+	for line in lines :
+		if line[:5:] == "TITLE":
+			timet=line[65:80].strip()
+			temps.append(timet)
+	print temps
+	infile.close()
+	return(temps)
+	
 #Calcule de la distance entre 2 residus selon 2 methodes de calcule:
-    #1. Distance la plus courte entre les 2 residus
-    #2. Distance entre les centres de masse
+#1. Distance la plus courte entre les 2 residus
+#2. Distance entre les centres de masse
 
 def Distance_res_min(dico1,dico2):   #Mode de calcul 1 : distance la plus courte
 #Dico 1 et Dico2 sont des dico de residus
@@ -117,7 +131,6 @@ def CMglob(dico):#c'est le dico[key] qu'on passe ici
     
     
 def giration(dico):#c'est le dico[key] qu'on passe ici
-#Distance entre CM et le residus le plus eloigne du CM
     dico_CM=CMglob(dico)
     list_dist=[]
     for key in dico_CM.keys():
@@ -125,22 +138,23 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
     return max(list_dist)  
 
     
-def writefile_glob(): 
+def writefile_glob():
     if os.path.isdir(path): #si le chemin est vers un dossier
         out=open("%s/PythonProgResults/output_analyse_global_%s"%(path,fichier),"w")
     else: #si le chemin est vers un fichier
         out=open("%s/PythonProgResults/output_analyse_global_%s"%(os.path.dirname(path),os.path.basename(fichier)),"w")
     
+    #est-ce utile ?  On veut juste la conformation, la giration et le RMSD ?
     #ecrire la structure d'origine (il s'agit des lignes pour le modele 0)
-    with open(fichier, "r") as filin:
-        line=filin.readline()
-        while line != "ENDMDL\n":
-            line=filin.next()
-            out.write(line)
-    filin.close()
+    #~ with open(fichier, "r") as filin:
+        #~ line=filin.readline()
+        #~ while line != "ENDMDL\n":
+            #~ line=filin.next()
+            #~ out.write(line)
+    #~ filin.close()
     
     #ecrire dans l'ordre les resultats de la comparaison des conformations avec la structure d'origine
-    out.write("\nConformation \t Giration \t\t RMSD results\n")
+    out.write("\nConformation \t RMSD results \t\t Giration\n")
     for i in range(len(dico)):
         out.write("\n%s: \t\t %.12f \t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
         
@@ -210,20 +224,63 @@ if __name__ == '__main__':
     if (analyse == "global"): #si vous voulez seulement une analyse globale
         for fichier in fichiers:
             print "Parsing:",fichier
-            dico=ParsingPDB(fichier)
-            
-            #calcul RMSD de chaque conformation par rapport a la structure d'origine
-            #et aussi calcul du rayon de giration de chaque conformation
+            dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
+            list_temps=Temps(fichier) 
+            #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
+            #3. et aussi calcul du rayon de giration de chaque conformation
             dico_RMSD={}
             dico_Giration={}
+            
+            list_RMSD=[]
+            list_conformation=[]
+            list_Giration=[]
+            
+  
             for key in dico:
                 list_delta=[]
                 dico_Giration[key]=giration(dico[key])
+                list_Giration.append(giration(dico[key]))
+                list_conformation.append(float(key))               #On recupere le numero de la conformation
                 for chain in dico[key]["chains"]:
-                    for res in dico[key][chain]["reslist"]:
-                        list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca         
+					 
+					 for res in dico[key][chain]["reslist"]:
+						 list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca         
+                        #pk comparer les distances que entre les Ca ?
+							
                 dico_RMSD[key]=RMSD(list_delta)
+                list_RMSD.append(RMSD(list_delta))	
+                
             writefile_glob()     
+            
+            
+            #Je propose pour interpreter les resultats (pour loral):
+            #une analyse visuelle des resultats : graph representant RMSD/Giration en fonction de la conformation
+            
+            y=np.array(list_RMSD) #RMSD 
+            y2=np.array(list_Giration)
+            x=np.array(list_conformation) #La conformation=numero du modele
+            plt.scatter(x,y,c='red')
+            plt.scatter(x,y2,c='blue')
+            axes = plt.gca()
+            axes.set_xlim(-30, 2100)
+            axes.set_ylim(-1,25)
+            plt.title('Variations RMSD (ou rayons de Giration) en fonction de la conformation')
+            plt.legend(['RMSD','Giration'])
+            plt.show()
+            
+            #On peut aussi regarder la variation de RMSD en fonction du temps : 
+            plt.subplot(2,1,1) #Partage la fenetre pour les emplacements des graphs
+            x=np.array(list_temps)
+            plt.plot(x,y)
+            plt.title('Evolution du RMSD en fonction du temps')
+            plt.show()
+            
+            #Idem pour la variation de Giration en fonction du temps: 
+            x=np.array(list_temps)
+            plt.plot(x,y2)
+            plt.title('Evolution du rayon en fonction du temps')
+            plt.show()
+            #Il me reste les legendes a mettre sur les boucles
             
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
         for fichier in fichiers:
