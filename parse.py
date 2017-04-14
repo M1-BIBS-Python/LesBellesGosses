@@ -117,6 +117,7 @@ def CMglob(dico):#c'est le dico[key] qu'on passe ici
     
     
 def giration(dico):#c'est le dico[key] qu'on passe ici
+#Distance entre CM et le residus le plus eloigne du CM
     dico_CM=CMglob(dico)
     list_dist=[]
     for key in dico_CM.keys():
@@ -124,7 +125,7 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
     return max(list_dist)  
 
     
-def writefile_glob():
+def writefile_glob(): 
     if os.path.isdir(path): #si le chemin est vers un dossier
         out=open("%s/PythonProgResults/output_analyse_global_%s"%(path,fichier),"w")
     else: #si le chemin est vers un fichier
