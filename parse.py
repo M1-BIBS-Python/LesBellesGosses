@@ -102,6 +102,7 @@ def Distance(x1,y1,z1,x2,y2,z2): #Calcule la distance entre deux points
 
 
 def RMSD(list_delta): #calcul de RMSD
+	#Liste_delta est une liste de distances
     distcarre=[]
     for delta in list_delta:
         distcarre.append(delta**2)
@@ -125,7 +126,8 @@ def CMglob(dico):#c'est le dico[key] qu'on passe ici
             globx.extend(listx)
             globy.extend(listy)
             globz.extend(listz)
-            glob["%s-%s"%(res,dico[chain][res]["resname"])]=CM(listx,listy,listz)
+            #~ glob["%s-%s"%(res,dico[chain][res]["resname"])]=CM(listx,listy,listz)
+            glob["%s"%(dico[chain][res]["resname"])]=CM(listx,listy,listz)
     glob["prot"]=CM(globx,globy,globz)
     return glob
     
@@ -169,10 +171,10 @@ def writefile_local():
         
     for i in range(len(dico_dist)):
 		out.write("MODEL %s\n"%i)
-		out.write("Residu \t\t Distance\n")
+		out.write("Residu \t\t Distance moyenne des residus par rapport au CM\n")
 		for key in dico_dist["%s"%i].keys():
 			out.write("%s \t\t %.12f\n"%(key,dico_dist["%s"%i][key]))
-        
+    out.write("RMSD moyen\n")    
     out.close()
 
 
@@ -245,7 +247,7 @@ if __name__ == '__main__':
 					 
 					 for res in dico[key][chain]["reslist"]:
 						 list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca         
-                        #pk comparer les distances que entre les Ca ?
+            
 							
                 dico_RMSD[key]=RMSD(list_delta)
                 list_RMSD.append(RMSD(list_delta))	
@@ -269,7 +271,7 @@ if __name__ == '__main__':
             plt.show()
             
             #On peut aussi regarder la variation de RMSD en fonction du temps : 
-            plt.subplot(2,1,1) #Partage la fenetre pour les emplacements des graphs
+            
             x=np.array(list_temps)
             plt.plot(x,y)
             plt.title('Evolution du RMSD en fonction du temps')
@@ -284,22 +286,98 @@ if __name__ == '__main__':
             
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
         for fichier in fichiers:
-            print "Parsing:",fichier
-            dico=ParsingPDB(fichier)
+			print "Parsing:",fichier
+			dico=ParsingPDB(fichier)
+			dico_RMSD={} #Va contenir les RMSD de chaque residus par rapport a la position dans la structure
+		
+			#################################
+            #Donnees pour les graphs
+			list_dist=[]
+			list_res=[] #Contient le numero de chaque residus
+			list_temps=Temps(fichier) 
+            ############################################
             
             #dist de chaque residu de chaque conformation par rapport au CM de la prot
-            dico_dist={}
-            for key in dico: #pour chaque conformation
-                dico_Enfouissement=CMglob(dico[key])
-                dico_dist[key]={} #dico pour une conformation, dist de chaque residu de chaque conformation seront stockee dedans
-                for cle in dico_Enfouissement:
+			dico_dist={}
+			for key in dico: #pour chaque conformation
+				dico_Enfouissement=CMglob(dico[key])
+				dico_dist[key]={} #dico pour une conformation, dist de chaque residu de chaque conformation seront stockee dedans
+				
+				#~ print list_res
+				for cle in dico_Enfouissement:
+					
 					if cle != "prot":
 						dico_dist[key][cle]=Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[cle][0],dico_Enfouissement[cle][1],dico_Enfouissement[cle][2])
-
-            writefile_local()
-                
-            #RMSD moyen pour chaque residu de chaque conformations (a ajouter)
-                
+						list_dist.append(Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[cle][0],dico_Enfouissement[cle][1],dico_Enfouissement[cle][2]))
+						
+						#On attribue des numeros a chacun des AA:
+						if cle == 'CYS':
+							list_res.append(1)
+						if cle == 'GLU':
+							list_res.append(2)
+						if cle == 'VAL':
+							list_res.append(3)
+						if cle == 'PRO':
+							list_res.append(4)
+						if cle == 'ALA':
+							list_res.append(5)
+						if cle == 'THR':
+							list_res.append(6)
+						if cle == 'PHE':
+							list_res.append(7)
+						if cle == 'ILE':
+							list_res.append(8)
+						if cle == 'LYS':
+							list_res.append(9)
+						if cle == 'GLY':
+							list_res.append(10)
+						if cle == 'ASP':
+							list_res.append(11)
+						if cle == 'LEU':
+							list_res.append(12)
+						if cle == 'HIS':
+							list_res.append(13)
+						if cle == 'SER':
+							list_res.append(14)
+						if cle == 'TRP':
+							list_res.append(15)
+						if cle == 'GLN':
+							list_res.append(16)
+						if cle == 'TYR':
+							list_res.append(17)
+						if cle == 'ASN':
+							list_res.append(18)
+						if cle == 'ARG':
+							list_res.append(19)
+						
+			writefile_local()
+            
+				#RMSD moyen pour chaque residu de chaque conformations (a ajouter)
+			    
+          
+			
+			
+            #Analyse des resultats
+				#Graph1: Distance en fonction du numero des residus
+				#Idee : superposer aussi les valeurs moyennes
+				#Mettre une legende pour dire a quoi correspondent les chiffres de laxe des x
+			y=np.array(list_dist)
+			x=np.array(list_res)
+			plt.scatter(x,y)
+			plt.show()
+				
+				#Graph2: RMSD moyen en fonction du temps
+			#~ y2=np.array()
+			#~ x=np.array(list_temps)
+			#~ plt.plot(x,y2)
+			#~ plt.show()
+			
+				#~ #Graph3: CM moyen en fonction du temps
+			#~ y3.np.array()
+			#~ x.np.array(list_temps)
+			#~ plt.plot(x,y3)
+			#~ plt.show()
+			
     #~ else : #si vous voulez a la fois une analyse globale et une analyse locale
         #~ for fichier in fichiers:
             #~ #do sth
