@@ -343,20 +343,20 @@ if __name__ == '__main__':
                 RMSDlist=RMSDlocal(dico["0"],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
 				
 				#####################Calcul du RMSD moyen################################
-                for chain in dico[key]["chains"]:
-                     for res in dico[key][chain]["reslist"]:
-						 residu=dico[key][chain][res]["resname"] #on recupere le nom du residu
+                #~ for chain in dico[key]["chains"]:
+                     #~ for res in dico[key][chain]["reslist"]:
+						 #~ print res
+						 #~ residu=dico[key][chain][res]["resname"] #on recupere le nom du residu
+				
 						 #On met dans un dico le nom du residu et son RMSD
-						 
-						 if residu not in dico_RMSD_moyen.keys(): #si le residus nest pas deja une cle
-							 dico_RMSD_moyen[residu]=dico_RMSD[key]
-						 else: #sinon on ajoute la valeur à la clé
-							 for valeur in dico_RMSD_moyen[residu]:
-								print valeur
+						 #~ if residu not in dico_RMSD_moyen.keys(): #si le residus nest pas deja une cle
+							 #~ dico_RMSD_moyen[residu]=dico_RMSD[key]
 							
-									
-							 dico_RMSD_moyen[residu]=(valeur+dico_RMSD[key])/2 #On calcule la moyenne au fur et a mesure
-                print dico_RMSD_moyen
+						 #~ else: #sinon on ajoute la valeur a la cle
+							 #~ for valeur in dico_RMSD_moyen[residu]:
+								#~ print valeur
+								#~ dico_RMSD_moyen[residu]=(residu+dico_RMSD[key])/2 #On calcule la moyenne au fur et a mesure
+                #~ print dico_RMSD_moyen
 				#########################################################################		 
 						
 							 
