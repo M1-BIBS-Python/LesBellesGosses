@@ -307,21 +307,21 @@ if __name__ == '__main__':
 
             writefile_glob()
 
-            #~ #Variation du RMSD en fonction du temps
-            #~ title='Evolution du RMSD en fonction du temps'
-            #~ l2=[]
-            #~ not l2
+            #Variation du RMSD en fonction du temps
+            title='Evolution du RMSD en fonction du temps'
+            l2=[]
+            not l2
 
-            #~ graph(dico_RMSD,list_temps,l2,title,'line')
+            graph(dico_RMSD,list_temps,l2,title,'line')
 
-            #~ #Variation du rayon de giration en fonction du temps
-            #~ title='Evolution du rayon de giration en fonction du temps'
-            #~ graph(dico_Giration,list_temps,l2,title,'line')
+            #Variation du rayon de giration en fonction du temps
+            title='Evolution du rayon de giration en fonction du temps'
+            graph(dico_Giration,list_temps,l2,title,'line')
 
 
-            #~ #graph representant RMSD/Giration en fonction de la conformation
-            #~ title='Variation RMSD/GIRATION en fonction de la conformation'
-            #~ graph(dico_RMSD,list_conformation,dico_Giration,title,"point")
+            #graph representant RMSD/Giration en fonction de la conformation
+            title='Variation RMSD/GIRATION en fonction de la conformation'
+            graph(dico_RMSD,list_conformation,dico_Giration,title,"point")
 
 
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
@@ -343,6 +343,7 @@ if __name__ == '__main__':
                 RMSDlist=RMSDlocal(dico["0"],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
 				
 				#####################Calcul du RMSD moyen################################
+				#On fait la moyenne sur chaque position
                 #~ for chain in dico[key]["chains"]:
                      #~ for res in dico[key][chain]["reslist"]:
 						 #~ print res
