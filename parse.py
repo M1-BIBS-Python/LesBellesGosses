@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 #-*- coding : utf8 -*-
-
+#~ python parse.py -p /Users/mathildebertrand/Desktop/M1-S2/python/Git/LesBellesGosses -a local
 """
 Author : LesBellesGosses
 Date : 12/04/2017
 Description : Projet Barstar
 """
 from math import sqrt
-#~ import matplotlib.pyplot as plt
-#~ import numpy as np
+import matplotlib.pyplot as plt
+import numpy as np
 
 def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
 
@@ -162,7 +162,7 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
         ordo2=ordonne2
     else:
         for i in range(len(ordonne2)):
-            ordo.append(ordonne2["%s"%i])
+            ordo2.append(ordonne2["%s"%i])
 
 
     if type(abscisse) is list:
@@ -198,7 +198,7 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
             #~ axes = plt.gca()
 
             #~ plt.legend(['RMSD','Giration'])
-        if type_graph=="point":
+        if type_graph=="line":
             plt.plot(x,y,c='red')
             plt.plot(x,y2,c='blue')
 
@@ -228,7 +228,61 @@ def writefile_local():
         for j in range(1,len(dico_dist["%s"%i])):
             out.write("%s \t\t\t %s \t\t\t %.12f \t\t\t\t %.12f\n"%(j,dico_dist["%s"%i]["residulist"][j-1],dico_dist["%s"%i]["%s"%j],dico_RMSD["%s"%i]["%s"%j]))
     out.close()
+#######################################################################################
+def Global(fichiers):
+	for fichier in fichiers:
+            if fichier=="start_prot_only.pdb":
+                dico_ref=ParsingPDB(fichier)
+            else:
+                print "Parsing:",fichier
+                dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
+                list_temps=Temps(fichier)
 
+            #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
+            #3. et aussi calcul du rayon de giration de chaque conformation
+
+            dico_RMSD={}
+            dico_Giration={}
+            
+
+            for key in dico:
+
+                list_delta=[]
+                dico_Giration[key]=giration(dico[key])
+
+                              #On recupere le numero de la conformation
+                for chain in dico[key]["chains"]:
+
+                     for res in dico[key][chain]["reslist"]:
+                         list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
+
+                dico_RMSD[key]=RMSD(list_delta)
+            
+            
+            writefile_glob() #Dit que fichier is not defined
+            #Par contre si on lenleve, trace correctement les graphs
+            
+            list_conformation=[] #Liste qui va contenir le numero de chaque conformation
+            for i in range(len(dico)):
+                list_conformation.append(int(i)) 
+        
+
+            #Variation du RMSD en fonction du temps
+            title='Evolution du RMSD en fonction du temps'
+            l2=[]
+            not l2
+
+            graph(dico_RMSD,list_temps,l2,title,'line')
+
+            #Variation du rayon de giration en fonction du temps
+            title='Evolution du rayon de giration en fonction du temps'
+            graph(dico_Giration,list_temps,l2,title,'line')
+
+            #Variation du RMSD et Giration en fonction de la conformation
+            graph(dico_RMSD,list_conformation,dico_Giration,title,"line")
+            title='Variation RMSD/Giration en fonction de la conformation'
+
+###############################################################################################	
 
 if __name__ == '__main__':
 
@@ -279,56 +333,19 @@ if __name__ == '__main__':
     #########################################################
 
     if (analyse == "global"): #si vous voulez seulement une analyse globale
-        for fichier in fichiers:
-            print "Parsing:",fichier
-            dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
-            list_temps=Temps(fichier)
-
-            #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
-            #3. et aussi calcul du rayon de giration de chaque conformation
-
-            dico_RMSD={}
-            dico_Giration={}
-            list_conformation=[] #Liste qui va contenir le numero de chaque conformation
-
-            for key in dico:
-
-                list_delta=[]
-                dico_Giration[key]=giration(dico[key])
-
-                list_conformation.append(float(key))               #On recupere le numero de la conformation
-                for chain in dico[key]["chains"]:
-
-                     for res in dico[key][chain]["reslist"]:
-                         list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico['0'][chain][res]['CA']['x']),float(dico['0'][chain][res]['CA']['y']),float(dico['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
-
-                dico_RMSD[key]=RMSD(list_delta)
-
-
-            writefile_glob()
-
-            #Variation du RMSD en fonction du temps
-            title='Evolution du RMSD en fonction du temps'
-            l2=[]
-            not l2
-
-            graph(dico_RMSD,list_temps,l2,title,'line')
-
-            #Variation du rayon de giration en fonction du temps
-            title='Evolution du rayon de giration en fonction du temps'
-            graph(dico_Giration,list_temps,l2,title,'line')
-
-
-            #graph representant RMSD/Giration en fonction de la conformation
-            title='Variation RMSD/GIRATION en fonction de la conformation'
-            graph(dico_RMSD,list_conformation,dico_Giration,title,"point")
-
+		Global(fichiers)
+		
+		
 
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
         for fichier in fichiers:
-            print "Parsing:",fichier
-            dico=ParsingPDB(fichier)
-            list_temps=Temps(fichier)
+            if fichier=="start_prot_only.pdb":
+                dico_ref=ParsingPDB(fichier)
+                print dico_ref
+            else:
+                print "Parsing:",fichier
+                dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
+                list_temps=Temps(fichier)
             
             
             #dist de chaque residu de chaque conformation par rapport au CM de la prot
@@ -336,36 +353,33 @@ if __name__ == '__main__':
             dico_dist={}
             dico_RMSD={} #Va contenir les RMSD de chaque residus par rapport a la position dans la structure
             dico_RMSD_moyen={} #Va contenir pour chaque residu le RMSD moyen
-            
             for key in dico: #pour chaque conformation
                 dico_Enfouissement=CMglob(dico[key])
-                dico_RMSD[key]=RMSDlocal(dico["0"],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
-                RMSDlist=RMSDlocal(dico["0"],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
-				
-				#####################Calcul du RMSD moyen################################
-				#On fait la moyenne sur chaque position
+                dico_RMSD[key]=RMSDlocal(dico_ref[key],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
+                RMSDlist=RMSDlocal(dico_ref[key],dico[key]) #comparaison de deux conformations (dans la fct, comparaison de chaque residu des deux conformations)
+                
+                #####################Calcul du RMSD moyen################################
+                #On fait la moyenne sur chaque position
                 #~ for chain in dico[key]["chains"]:
                      #~ for res in dico[key][chain]["reslist"]:
-						 #~ print res
-						 #~ residu=dico[key][chain][res]["resname"] #on recupere le nom du residu
-				
-						 #On met dans un dico le nom du residu et son RMSD
-						 #~ if residu not in dico_RMSD_moyen.keys(): #si le residus nest pas deja une cle
-							 #~ dico_RMSD_moyen[residu]=dico_RMSD[key]
-							
-						 #~ else: #sinon on ajoute la valeur a la cle
-							 #~ for valeur in dico_RMSD_moyen[residu]:
-								#~ print valeur
-								#~ dico_RMSD_moyen[residu]=(residu+dico_RMSD[key])/2 #On calcule la moyenne au fur et a mesure
+                         #~ print res
+                         #~ residu=dico[key][chain][res]["resname"] #on recupere le nom du residu
+                
+                         #On met dans un dico le nom du residu et son RMSD
+                         #~ if residu not in dico_RMSD_moyen.keys(): #si le residus nest pas deja une cle
+                             #~ dico_RMSD_moyen[residu]=dico_RMSD[key]
+                            
+                         #~ else: #sinon on ajoute la valeur a la cle
+                             #~ for valeur in dico_RMSD_moyen[residu]:
+                                #~ print valeur
+                                #~ dico_RMSD_moyen[residu]=(residu+dico_RMSD[key])/2 #On calcule la moyenne au fur et a mesure
                 #~ print dico_RMSD_moyen
-				#########################################################################		 
-						
-							 
+                #########################################################################        
+                        
+                             
                 for res in dico_Enfouissement:
-                    
                     if res != "prot" and res != "residulist":
                         dico_dist[key][res]=Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[res][0],dico_Enfouissement[res][1],dico_Enfouissement[res][2])
-
 
                     if res == "residulist":
                         dico_dist[key]["residulist"]=dico_Enfouissement["residulist"]
