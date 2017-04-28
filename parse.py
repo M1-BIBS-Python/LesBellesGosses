@@ -6,13 +6,18 @@ Author : LesBellesGosses
 Date : 12/04/2017
 Description : Projet Barstar
 """
+
 from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse,os,glob,shutil,sys
 
-def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
-
+#parser un fichier pdb
+def ParsingPDB (pdbFile):
+    """but : creer un dictionnaire a partir d'un fichier pdb
+    input : le nom d'un fichier pdb
+    output : un dictionnaire
+    """ 
     infile = open(pdbFile, "r")
     lines = infile.readlines()
 
@@ -54,22 +59,30 @@ def ParsingPDB (pdbFile):#fonction qui parse un fichier pdb
     infile.close()
     return(dico_models)
 
-def Temps (pdbFile): #Fonction qui lit les premieres lignes du fichier pdb et mets dans une liste les valeurs du temps
-    temps = []
 
+#Fonction qui lit les premieres lignes du fichier pdb et mets dans une liste les valeurs du temps
+def Temps (pdbFile): 
+    """but : creer un liste contenant les valeurs du temps
+    input : le nom d'un fichier pdb
+    output : une liste 
+    """ 
+    temps = []
     infile = open (pdbFile, "r")
     lines = infile.readlines()
-
     for line in lines :
         if line[:5:] == "TITLE":
             timet=line[65:80].strip()
             temps.append(timet)
-    #print temps
     infile.close()
     return(temps)
 
 
+#calcul le centre de masse (en negligeant la masse atomique)
 def CM(listx,listy,listz):
+    """but : calculer le centre de masse
+    input : l'ensemble des abscisses, des ordonnees et des cotes en liste
+    output : une liste contenant l'abscisse, l'ordonnee et la cotes du centre de masse
+    """ 
     x=sum(listx)/float(len(listx))
     y=sum(listy)/float(len(listy))
     z=sum(listz)/float(len(listy))
@@ -77,20 +90,33 @@ def CM(listx,listy,listz):
     return coords
 
 
-def Distance(x1,y1,z1,x2,y2,z2): #Calcule la distance entre deux points
-    
+#Calcul de distance entre deux points
+def Distance(x1,y1,z1,x2,y2,z2): 
+    """but : calculer la distance dans l'espace tridimensionnelle
+    input : les coordonnees de deux points
+    output : la distance entre ces deux points
+    """ 
     return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
 
 
-def RMSD(list_delta): #calcul de RMSD
-    #List_delta est une liste de distances
+#calcul de RMSD
+def RMSD(list_delta): 
+    """but : calculer le RMSD
+    input : une liste de distances
+    output : la valeur de RMSD
+    """ 
     distcarre=[]
     for delta in list_delta:
         distcarre.append(delta**2)
     return (sqrt((sum(distcarre))/float(len(list_delta))))
     
 
-def CMglob(dico):#c'est le dico[key] qu'on passe ici
+#creer un dictionnaire de centre de masse pour une proteine
+def CMglob(dico):
+    """but : calculer le centre de masse de chaque residu ainsi que le centre de masse de la proteine
+    input : dico de proteine pour une conformation donnee (dico[conformation])
+    output : un dictionnaire contenant le centre de masse de chaque residu et le centre de masse de la proteine
+    """ 
     globx=[] #list permet de stocker le x de tous les atomes d'une prot
     globy=[]
     globz=[]
@@ -114,7 +140,13 @@ def CMglob(dico):#c'est le dico[key] qu'on passe ici
     return glob # dico contient le CM de chaque residu et le CM de la prot
     
 
+#Enfouissement de chaque residu dans une proteine (pour l'analyse locale)
+#a modifier pour tenir compte le fichier de ref
 def Enfouissement(dico):#c'est le dico qu'on passe ici
+    """but : etude de l'enfouissement pour tous les conformations d'une proteine 
+    input : dico de proteine (avec tous ces conformations)
+    output : une tuple contenant un dictionnaire de centre de masse d'une residus (pour tous conformations) ainsi qu'un dictionnaire de valeur de l'enfouissement moyenne
+    """ 
     glob={}
     glob["prot"]=[]
     for conformation in dico:
@@ -148,7 +180,12 @@ def Enfouissement(dico):#c'est le dico qu'on passe ici
     return (glob,moy)
     
 
+#calcul de RMSD local
 def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RMSD moyen pour chaque residu
+    """but : calculer le RMSD moyen de chaque residu
+    input : un dico de proteine et un dico de structure d'origine
+    output : un dictionnaire contenant nb residu comme cle, et RMSD local comme valeur, et une cle residulist contenant en ordre les residus
+    """ 
     #les dicos comme arguments
     flex_res={}
     flex_res["residulist"]=[]
@@ -201,15 +238,23 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
         ordo=ordonnee
 
     else: #sinon cest un dico
-        for i in range(len(ordonnee)): #on parcours le dictionnaire
-            ordo.append(ordonnee["%s"%i]) #Et on range dans une liste les differentes valeurs contenues dans le dico, dans lordre dans lesquelles on les a trouve
-
+        #j'ai trouve pk cette fct bloque pour local: les dicos ne contiennent pas la cle "0" (diff que global"), donc je propose une solution ci-dessous et au moins ca marche pour un test, apres il faut verifier si c'est correcte
+        if "0" in ordonnee: 
+            for i in range(len(ordonnee)): #on parcours le dictionnaire
+                ordo.append(ordonnee["%s"%i]) #Et on range dans une liste les differentes valeurs contenues dans le dico, dans lordre dans lesquelles on les a trouve
+        else:
+            for i in range(1,len(ordonnee)):
+                ordo.append(ordonnee["%s"%i])
 
     if type(ordonne2) is list: #Si cest une liste
         ordo2=ordonne2
     else:
-        for i in range(len(ordonne2)):
-            ordo2.append(ordonne2["%s"%i])
+        if "0" in ordonnee:
+            for i in range(len(ordonne2)):
+                ordo2.append(ordonne2["%s"%i])
+        else:
+            for i in range(1,len(ordonne2)):
+                ordo2.append(ordonne2["%s"%i])
 
 
     if type(abscisse) is list:
@@ -324,6 +369,7 @@ def Local(fichier):
     list_temps=Temps(fichier)
     dico_RMSD_moy=RMSDlocal(dico,dico_ref)      
     (dicoCM,dicoEnf)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
+    #graph(dicoCM,list_temps,[],"essai","line")
     writefile_local(dico_RMSD_moy,dicoEnf)          
 ###############################################################################################
 
