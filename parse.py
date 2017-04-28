@@ -78,6 +78,7 @@ def CM(listx,listy,listz):
 
 
 def Distance(x1,y1,z1,x2,y2,z2): #Calcule la distance entre deux points
+    
     return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
 
 
@@ -93,6 +94,10 @@ def Enfouissement(dico):#c'est le dico qu'on passe ici
     glob={}
     glob["residulist"]=[]
     glob["prot"]=[]
+
+
+
+
     for conformation in dico:
         globx=[] #list permet de stocker le x de tous les atomes d'une prot
         globy=[]
@@ -114,12 +119,35 @@ def Enfouissement(dico):#c'est le dico qu'on passe ici
                 if res not in glob.keys():
                     glob[res]=[]
                 glob[res].append(CM(listx,listy,listz))#pour un residu donne, CM de ce residu dans chaque conformation
+
         glob["prot"].append(CM(globx,globy,globz))# CM de prot de chaque conformation
-        #reste a calculer la moyenne de dist 
-    return glob # dico contient le CM de chaque residu et le CM de la prot
+ 
+        #1. Calcule de la distance pour chaque res pour chaque conformation
+   
+    for res in glob.keys():
+        if res != "residulist" and res != "prot":
+            for i in range (len(glob[res])):
+               
+                glob[res][i]=(Distance(glob[res][i][0],glob[res][i][1],glob[res][i][2],glob["prot"][i][0],glob["prot"][i][1],glob["prot"][i][2]))
+          
+
+        #2. Calcule de la distance moyenne
+    moy={}
+ 
+    for res in glob.keys():
+        
+        if res != "residulist" and res != "prot":
+            moy[res]= sum(glob[res])/len(glob[res])
+            
+    #~ print moy
+    
+    #~ final=[glob,moy] #Liste qui contient le dico de distance et celui de distance moyenne
+    
+    return (glob,moy)
 
 
-def RMSDlocal(dico1,dico2): #les dicos comme arguments
+def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RMSD moyen pour chaque residu
+    #les dicos comme arguments
     flex_res={}
     flex_res["residulist"]=[]
     for conformation in dico1:
@@ -257,7 +285,7 @@ def Global(fichier):
 
     dico_RMSD={}
     dico_Giration={}
-            
+
     for key in dico:
 
         list_delta=[]
@@ -269,10 +297,10 @@ def Global(fichier):
                 list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico_ref['0'][chain][res]['CA']['x']),float(dico_ref['0'][chain][res]['CA']['y']),float(dico_ref['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
 
         dico_RMSD[key]=RMSD(list_delta)
-            
-    writefile_glob(dico,dico_RMSD,dico_Giration) 
-            
-    list_conformation=sorted(int(i) for i in dico.keys()) #numero de conformation trie 
+
+    writefile_glob(dico,dico_RMSD,dico_Giration)
+
+    list_conformation=sorted(int(i) for i in dico.keys()) #numero de conformation trie
 
     #Variation du RMSD en fonction du temps
     title='Evolution du RMSD en fonction du temps'
@@ -289,7 +317,7 @@ def Global(fichier):
     graph(dico_RMSD,list_conformation,dico_Giration,title,"line")
     title='Variation RMSD/Giration en fonction de la conformation'
 
-###############################################################################################	
+###############################################################################################
 
 if __name__ == '__main__':
 
@@ -334,7 +362,7 @@ if __name__ == '__main__':
         for fichier in fichiers:
             if fichier!="start_prot_only.pdb":
                 Global(fichier)
-        
+
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
         for fichier in fichiers:
             if fichier!="start_prot_only.pdb":
@@ -342,27 +370,12 @@ if __name__ == '__main__':
                 dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
                 list_temps=Temps(fichier)
                 RMSDlocal(dico,dico_ref)
-                dico_CM=Enfouissement(dico)
                 
-                #####################Calcul du RMSD moyen################################
-                #On fait la moyenne sur chaque position
-                #~ for chain in dico[key]["chains"]:
-                     #~ for res in dico[key][chain]["reslist"]:
-                         #~ print res
-                         #~ residu=dico[key][chain][res]["resname"] #on recupere le nom du residu
+                (liste_CM,list_moy)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
                 
-                         #On met dans un dico le nom du residu et son RMSD
-                         #~ if residu not in dico_RMSD_moyen.keys(): #si le residus nest pas deja une cle
-                             #~ dico_RMSD_moyen[residu]=dico_RMSD[key]
-                            
-                         #~ else: #sinon on ajoute la valeur a la cle
-                             #~ for valeur in dico_RMSD_moyen[residu]:
-                                #~ print valeur
-                                #~ dico_RMSD_moyen[residu]=(residu+dico_RMSD[key])/2 #On calcule la moyenne au fur et a mesure
-                #~ print dico_RMSD_moyen
-                #########################################################################        
-                        
-                             
+            
+
+
                 #~ for res in dico_Enfouissement:
                     #~ if res != "prot" and res != "residulist":
                         #~ dico_dist[key][res]=Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[res][0],dico_Enfouissement[res][1],dico_Enfouissement[res][2])
@@ -372,16 +385,12 @@ if __name__ == '__main__':
 
 
 
-                    #~ for atom in dico[chain][res]["atomlist"]:
-                        #~ print atom
-            #RMSD moyen pour chaque residu de chaque conformation (a ajouter)
+
 
             #writefile_local()
-            
+           
 
-
-
-
+          
 
             #Analyse des resultats
                 #Graph1: Distance en fonction du numero des residus
