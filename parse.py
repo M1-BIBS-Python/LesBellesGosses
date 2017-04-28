@@ -88,55 +88,57 @@ def RMSD(list_delta): #calcul de RMSD
     for delta in list_delta:
         distcarre.append(delta**2)
     return (sqrt((sum(distcarre))/float(len(list_delta))))
+    
 
+def CMglob(dico):#c'est le dico[key] qu'on passe ici
+    globx=[] #list permet de stocker le x de tous les atomes d'une prot
+    globy=[]
+    globz=[]
+    glob={}
+    glob["residulist"]=[]
+    for chain in dico["chains"]:
+        for res in dico[chain]["reslist"]:
+            listx=[]
+            listy=[]
+            listz=[]
+            for atom in dico[chain][res]["atomlist"]:
+                listx.append(float(dico[chain][res][atom]['x']))
+                listy.append(float(dico[chain][res][atom]['y']))
+                listz.append(float(dico[chain][res][atom]['z']))
+            globx.extend(listx)
+            globy.extend(listy)
+            globz.extend(listz)
+            glob[res]=CM(listx,listy,listz)
+            glob["residulist"].append(dico[chain][res]["resname"])
+    glob["prot"]=CM(globx,globy,globz)
+    return glob # dico contient le CM de chaque residu et le CM de la prot
+    
 
 def Enfouissement(dico):#c'est le dico qu'on passe ici
     glob={}
-    glob["residulist"]=[]
     glob["prot"]=[]
-
-
-
-
     for conformation in dico:
-        globx=[] #list permet de stocker le x de tous les atomes d'une prot
-        globy=[]
-        globz=[]
-        for chain in dico[conformation]["chains"]:
-            for res in dico[conformation][chain]["reslist"]:
-                listx=[]
-                listy=[]
-                listz=[]
-                for atom in dico[conformation][chain][res]["atomlist"]:
-                    listx.append(float(dico[conformation][chain][res][atom]['x']))
-                    listy.append(float(dico[conformation][chain][res][atom]['y']))
-                    listz.append(float(dico[conformation][chain][res][atom]['z']))
-                globx.extend(listx)
-                globy.extend(listy)
-                globz.extend(listz)
-                if conformation=="0":
-                    glob["residulist"].append(dico["0"][chain][res]["resname"]) #les residus dans une prot en ordre
-                if res not in glob.keys():
-                    glob[res]=[]
-                glob[res].append(CM(listx,listy,listz))#pour un residu donne, CM de ce residu dans chaque conformation
+        dico_CM=CMglob(dico[conformation])
+        for res in dico_CM:
+            if res not in glob:
+                glob[res]=[]
+            glob[res].append(dico_CM[res]) #centre de masse de chaque residu de chaque conformation
+        glob["prot"].append(dico_CM["prot"]) #centre de masse de la proteine
+    glob["residulist"]=dico_CM["residulist"] #les residus d'une proteine dans l'ordre
 
-        glob["prot"].append(CM(globx,globy,globz))# CM de prot de chaque conformation
- 
-        #1. Calcule de la distance pour chaque res pour chaque conformation
-   
     for res in glob.keys():
         if res != "residulist" and res != "prot":
             for i in range (len(glob[res])):
-               
+
                 glob[res][i]=(Distance(glob[res][i][0],glob[res][i][1],glob[res][i][2],glob["prot"][i][0],glob["prot"][i][1],glob["prot"][i][2]))
           
-
+    
         #2. Calcule de la distance moyenne
     moy={}
- 
+    del glob["prot"]
     for res in glob.keys():
         
-        if res != "residulist" and res != "prot":
+        if res != "residulist":
             moy[res]= sum(glob[res])/len(glob[res])
             
     #~ print moy
@@ -144,7 +146,7 @@ def Enfouissement(dico):#c'est le dico qu'on passe ici
     #~ final=[glob,moy] #Liste qui contient le dico de distance et celui de distance moyenne
     
     return (glob,moy)
-
+    
 
 def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RMSD moyen pour chaque residu
     #les dicos comme arguments
@@ -177,7 +179,7 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
 def giration(dico):#c'est le dico[key] qu'on passe ici
     dico_CM=CMglob(dico)
     list_dist=[]
-    for res in dico_CM.keys():
+    for res in dico_CM:
         if res != "residulist":
             list_dist.append(Distance(dico_CM["prot"][0],dico_CM["prot"][1],dico_CM["prot"][2],dico_CM[res][0],dico_CM[res][1],dico_CM[res][2]))
     return max(list_dist)
@@ -253,25 +255,23 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
 
 
 ##########################################################################
-def writefile_glob(dico,dico_RMSD,dico_Giration):
+def writefile_glob(dico,dRMSD,dGiration):
     out=open("%s/PythonProgResults/GlobalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
 
     #ecrire dans l'ordre les resultats de la comparaison des conformations avec la structure d'origine
     out.write("\nConformation \t RMSD results \t\t Giration\n")
     for i in range(len(dico)):
-        out.write("\n%s: \t\t %.12f \t %.12f"%(i,dico_RMSD["%s"%i],dico_Giration["%s"%i]))
+        out.write("\n%s: \t\t %.12f \t %.12f"%(i,dRMSD["%s"%i],dGiration["%s"%i]))
 
     out.close()
 
 
-def writefile_local():
+def writefile_local(dRMSD_moy,dEnf):
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
 
-    for i in range(len(dico_dist)):
-        out.write("MODEL %s\n"%i)
-        out.write("Residu sequence number \t Residu \t Distance between CM of residu and CM of protein \t RMSD \n")
-        for j in range(1,len(dico_dist["%s"%i])):
-            out.write("%s \t\t\t %s \t\t\t %.12f \t\t\t\t %.12f\n"%(j,dico_dist["%s"%i]["residulist"][j-1],dico_dist["%s"%i]["%s"%j],dico_RMSD["%s"%i]["%s"%j]))
+    out.write("Residue number \t\t Residue \t Mean RMSD \t\t Residue depth \n")
+    for i in range(1,len(dRMSD_moy)):
+        out.write("%s \t\t\t %s \t\t %.12f \t %.12f \n"%(i,dRMSD_moy["residulist"][i-1],dRMSD_moy["%s"%i],dEnf["%s"%i]))
     out.close()
 #######################################################################################
 def Global(fichier):
@@ -317,6 +317,14 @@ def Global(fichier):
     graph(dico_RMSD,list_conformation,dico_Giration,title,"line")
     title='Variation RMSD/Giration en fonction de la conformation'
 
+
+def Local(fichier):
+    print "Parsing:",fichier
+    dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
+    list_temps=Temps(fichier)
+    dico_RMSD_moy=RMSDlocal(dico,dico_ref)      
+    (dicoCM,dicoEnf)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
+    writefile_local(dico_RMSD_moy,dicoEnf)          
 ###############################################################################################
 
 if __name__ == '__main__':
@@ -366,31 +374,12 @@ if __name__ == '__main__':
     elif (analyse == "local"): #si vous voulez seulement une analyse locale
         for fichier in fichiers:
             if fichier!="start_prot_only.pdb":
-                print "Parsing:",fichier
-                dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
-                list_temps=Temps(fichier)
-                RMSDlocal(dico,dico_ref)
-                
-                (liste_CM,list_moy)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
-                
-            
-
-
-                #~ for res in dico_Enfouissement:
-                    #~ if res != "prot" and res != "residulist":
-                        #~ dico_dist[key][res]=Distance(dico_Enfouissement["prot"][0],dico_Enfouissement["prot"][1],dico_Enfouissement["prot"][2],dico_Enfouissement[res][0],dico_Enfouissement[res][1],dico_Enfouissement[res][2])
-
-                    #~ if res == "residulist":
-                        #~ dico_dist[key]["residulist"]=dico_Enfouissement["residulist"]
-
-
-
-
-
-            #writefile_local()
-           
-
-          
+                Local(fichier)
+    else : #si vous voulez a la fois une analyse globale et une analyse locale
+        for fichier in fichiers:
+            if fichier!="start_prot_only.pdb":
+                Global(fichier)
+                Local(fichier)
 
             #Analyse des resultats
                 #Graph1: Distance en fonction du numero des residus
@@ -414,9 +403,7 @@ if __name__ == '__main__':
             #~ plt.plot(x,y3)
             #~ plt.show()
 
-    #~ else : #si vous voulez a la fois une analyse globale et une analyse locale
-        #~ for fichier in fichiers:
-            #~ #do sth
+
 
 
 
