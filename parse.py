@@ -189,6 +189,9 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
     #les dicos comme arguments
     flex_res={}
     flex_res["residulist"]=[]
+    
+    name=[] #nom des residus dans lordre dans lesquels on les trouve
+    valeurs=[] #Valeurs du RMSD moyen pour chacun des residus
     for conformation in dico1:
         for chain in dico1[conformation]["chains"]:
             for res in dico1[conformation][chain]["reslist"]:
@@ -205,12 +208,13 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
                     flex_res[res]=[]
                 flex_res[res].append(RMSD(delta)) # pour un residu donne, on ajoute son rmsd dans chaque conformation
                 if conformation=="0":
-                    flex_res["residulist"].append(dico1[conformation][chain][res]["resname"]) #les residus dans une prot en ordre
+                    name.append(dico1[conformation][chain][res]["resname"])
 
     for res in flex_res:
         if res != "residulist":
-            flex_res[res]=sum(flex_res[res])/len(flex_res[res]) #pour un residu, on fait la moyenne de rmsd pour toutes les conformations
-    return flex_res #dico ayant ResSeq comme cle, et RMSD local comme valeur, et une cle residulist contenant en ordre les residus
+            valeurs.append(sum(flex_res[res])/len(flex_res[res])) #Calcul du RMSD moyen
+    
+    return (flex_res,name,valeurs) #dico ayant ResSeq comme cle, et RMSD local comme valeur, et une cle residulist contenant en ordre les residus
 
 
 def giration(dico):#c'est le dico[key] qu'on passe ici
@@ -370,7 +374,41 @@ def Local(fichier):
     dico_RMSD_moy=RMSDlocal(dico,dico_ref)      
     (dicoCM,dicoEnf)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
     #graph(dicoCM,list_temps,[],"essai","line")
-    writefile_local(dico_RMSD_moy,dicoEnf)          
+    #~ writefile_local(dico_RMSD_moy,dicoEnf) 
+    
+    
+    ######Analyse des resultats################################
+
+    #Residus presents dans les regions flexibles
+    #RMSD en fonction de la conformation ?
+    #~ l2=[]
+    #~ not l2
+    #~ RMSD=[]
+    #~ num=[]
+
+    #~ for cle in dico_RMSD.values():
+        #~ RMSD.append(cle)
+    #~ for cle in dico_RMSD.keys():
+        #~ num.append(cle)
+    #~ graph(valeurs,list_temps,l2,"RMSD en fonction du num de residu","line")
+    #~ #Enfouissement de chaque residus
+    
+    #=>On met dans une liste tous les residus dont le RMSD est inferieur au seuil
+    #=>Et dans une autre tous les residus dont le RMSD est superieur au seuil
+    inf_seuil=[]
+    sup_seuil=[]
+
+    for i in range(len(name)):
+        if valeurs[i]<=2:  #si la valeur est inferieure au seuil
+            inf_seuil.append(name[i])
+        if valeurs[i]>2: #Sinon
+            sup_seuil.append(name[i])
+
+    print inf_seuil
+    print sup_seuil
+    
+    
+             
 ###############################################################################################
 
 if __name__ == '__main__':
@@ -426,28 +464,6 @@ if __name__ == '__main__':
             if fichier!="start_prot_only.pdb":
                 Global(fichier)
                 Local(fichier)
-
-            #Analyse des resultats
-                #Graph1: Distance en fonction du numero des residus
-                #Idee : superposer aussi les valeurs moyennes
-                #Mettre une legende pour dire a quoi correspondent les chiffres de laxe des x
-            #~ y=np.array(list_dist)
-            #~ x=np.array(list_res)
-            #~ plt.scatter(x,y)
-            #~ plt.show()
-
-                #Graph2: RMSD moyen en fonction du temps
-
-            #~ y2=np.array()
-            #~ x=np.array(list_temps)
-            #~ plt.plot(x,y2)
-            #~ plt.show()
-
-                #~ #Graph3: CM moyen en fonction du temps
-            #~ y3.np.array()
-            #~ x.np.array(list_temps)
-            #~ plt.plot(x,y3)
-            #~ plt.show()
 
 
 
