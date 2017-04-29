@@ -138,44 +138,45 @@ def CMglob(dico):
             glob["residulist"].append(dico[chain][res]["resname"])
     glob["prot"]=CM(globx,globy,globz)
     return glob # dico contient le CM de chaque residu et le CM de la prot
-    
+
+
+def RMSDglobal(dico,dico_ref):
+    dico_RMSD={}
+    for key in dico:
+        list_delta=[]
+        for chain in dico[key]["chains"]:
+            for res in dico[key][chain]["reslist"]:
+                list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico_ref['0'][chain][res]['CA']['x']),float(dico_ref['0'][chain][res]['CA']['y']),float(dico_ref['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
+        dico_RMSD[key]=RMSD(list_delta)
+    return dico_RMSD
 
 #Enfouissement de chaque residu dans une proteine (pour l'analyse locale)
-#a modifier pour tenir compte le fichier de ref
-def Enfouissement(dico):#c'est le dico qu'on passe ici
+def Enfouissement(dico,dico_ref):#c'est le dico qu'on passe ici
     """but : etude de l'enfouissement pour tous les conformations d'une proteine 
-    input : dico de proteine (avec tous ces conformations)
+    input : dico de proteine et dico de proteine de la structure d'origine
     output : une tuple contenant un dictionnaire de centre de masse d'une residus (pour tous conformations) ainsi qu'un dictionnaire de valeur de l'enfouissement moyenne
     """ 
     glob={}
-    glob["prot"]=[]
+    glob_ref=CMglob(dico_ref["0"])
     for conformation in dico:
         dico_CM=CMglob(dico[conformation])
         for res in dico_CM:
             if res not in glob:
                 glob[res]=[]
             glob[res].append(dico_CM[res]) #centre de masse de chaque residu de chaque conformation
-        glob["prot"].append(dico_CM["prot"]) #centre de masse de la proteine
     glob["residulist"]=dico_CM["residulist"] #les residus d'une proteine dans l'ordre
-
-    for res in glob.keys():
-        if res != "residulist" and res != "prot":
-            for i in range (len(glob[res])):
-
-                glob[res][i]=(Distance(glob[res][i][0],glob[res][i][1],glob[res][i][2],glob["prot"][i][0],glob["prot"][i][1],glob["prot"][i][2]))
-          
     
+    for res in glob.keys():
+        if res != "residulist":
+            for i in range (len(glob[res])):
+                glob[res][i]=(Distance(glob[res][i][0],glob[res][i][1],glob[res][i][2],glob_ref["prot"][0],glob_ref["prot"][1],glob_ref["prot"][2]))
+          
         #2. Calcule de la distance moyenne
     moy={}
-    del glob["prot"]
     for res in glob.keys():
         
         if res != "residulist":
             moy[res]= sum(glob[res])/len(glob[res])
-            
-    #~ print moy
-    
-    #~ final=[glob,moy] #Liste qui contient le dico de distance et celui de distance moyenne
     
     return (glob,moy)
     
@@ -184,14 +185,12 @@ def Enfouissement(dico):#c'est le dico qu'on passe ici
 def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RMSD moyen pour chaque residu
     """but : calculer le RMSD moyen de chaque residu
     input : un dico de proteine et un dico de structure d'origine
-    output : un dictionnaire contenant nb residu comme cle, et RMSD local comme valeur, et une cle residulist contenant en ordre les residus
+    output : un dictionnaire contenant une liste de residus et une liste de RMSD correspondant
     """ 
     #les dicos comme arguments
     flex_res={}
     flex_res["residulist"]=[]
-    
-    name=[] #nom des residus dans lordre dans lesquels on les trouve
-    valeurs=[] #Valeurs du RMSD moyen pour chacun des residus
+    flex_res["RMSDlist"]=[]
     for conformation in dico1:
         for chain in dico1[conformation]["chains"]:
             for res in dico1[conformation][chain]["reslist"]:
@@ -208,22 +207,30 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
                     flex_res[res]=[]
                 flex_res[res].append(RMSD(delta)) # pour un residu donne, on ajoute son rmsd dans chaque conformation
                 if conformation=="0":
-                    name.append(dico1[conformation][chain][res]["resname"])
-
-    for res in flex_res:
-        if res != "residulist":
-            valeurs.append(sum(flex_res[res])/len(flex_res[res])) #Calcul du RMSD moyen
+                    flex_res["residulist"].append(dico1[conformation][chain][res]["resname"])
     
-    return (flex_res,name,valeurs) #dico ayant ResSeq comme cle, et RMSD local comme valeur, et une cle residulist contenant en ordre les residus
+    for i in range(1,len(flex_res)-1):
+        flex_res["RMSDlist"].append(sum(flex_res["%s"%i])/len(flex_res["%s"%i])) #Calcul du RMSD moyen
+        del flex_res["%s"%i]
+
+    return flex_res 
 
 
+#calcul de giration
 def giration(dico):#c'est le dico[key] qu'on passe ici
-    dico_CM=CMglob(dico)
-    list_dist=[]
-    for res in dico_CM:
-        if res != "residulist":
-            list_dist.append(Distance(dico_CM["prot"][0],dico_CM["prot"][1],dico_CM["prot"][2],dico_CM[res][0],dico_CM[res][1],dico_CM[res][2]))
-    return max(list_dist)
+    """but : calculer le rayon de giration d'une proteine
+    input : un dico de proteine d'une conformation donnee
+    output : la valeur du rayon de giration
+    """ 
+    dico_Giration={}
+    for key in dico:
+        dico_CM=CMglob(dico[key])
+        list_dist=[]
+        for res in dico_CM:
+            if res != "residulist":
+                list_dist.append(Distance(dico_CM["prot"][0],dico_CM["prot"][1],dico_CM["prot"][2],dico_CM[res][0],dico_CM[res][1],dico_CM[res][2]))
+        dico_Giration[key]=max(list_dist)
+    return dico_Giration
 #################################################################
 #Permet de representer des graphs
 #ordonnee et abscisse sont les elements que lon veut representer : peuevnt etre des listes ou des dicos
@@ -306,21 +313,17 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
 ##########################################################################
 def writefile_glob(dico,dRMSD,dGiration):
     out=open("%s/PythonProgResults/GlobalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
-
-    #ecrire dans l'ordre les resultats de la comparaison des conformations avec la structure d'origine
     out.write("\nConformation \t RMSD results \t\t Giration\n")
     for i in range(len(dico)):
         out.write("\n%s: \t\t %.12f \t %.12f"%(i,dRMSD["%s"%i],dGiration["%s"%i]))
-
     out.close()
 
 
 def writefile_local(dRMSD_moy,dEnf):
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
-
     out.write("Residue number \t\t Residue \t Mean RMSD \t\t Residue depth \n")
-    for i in range(1,len(dRMSD_moy)):
-        out.write("%s \t\t\t %s \t\t %.12f \t %.12f \n"%(i,dRMSD_moy["residulist"][i-1],dRMSD_moy["%s"%i],dEnf["%s"%i]))
+    for i in range(len(dRMSD_moy["residulist"])):
+        out.write("%s \t\t\t %s \t\t %.12f \t %.12f \n"%(i+1,dRMSD_moy["residulist"][i],dRMSD_moy["RMSDlist"][i],dEnf["%s"%(i+1)]))
     out.close()
 #######################################################################################
 def Global(fichier):
@@ -331,22 +334,8 @@ def Global(fichier):
 
     #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
     #3. et aussi calcul du rayon de giration de chaque conformation
-
-    dico_RMSD={}
-    dico_Giration={}
-
-    for key in dico:
-
-        list_delta=[]
-        dico_Giration[key]=giration(dico[key])
-
-        for chain in dico[key]["chains"]:
-
-            for res in dico[key][chain]["reslist"]:
-                list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico_ref['0'][chain][res]['CA']['x']),float(dico_ref['0'][chain][res]['CA']['y']),float(dico_ref['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
-
-        dico_RMSD[key]=RMSD(list_delta)
-
+    dico_RMSD=RMSDglobal(dico,dico_ref)
+    dico_Giration=giration(dico)
     writefile_glob(dico,dico_RMSD,dico_Giration)
 
     list_conformation=sorted(int(i) for i in dico.keys()) #numero de conformation trie
@@ -372,11 +361,35 @@ def Local(fichier):
     dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
     list_temps=Temps(fichier)
     dico_RMSD_moy=RMSDlocal(dico,dico_ref)      
-    (dicoCM,dicoEnf)=Enfouissement(dico) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
+    (dicoCM,dicoEnf)=Enfouissement(dico,dico_ref) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
     #graph(dicoCM,list_temps,[],"essai","line")
-    #~ writefile_local(dico_RMSD_moy,dicoEnf) 
+    #dclasse=createClass(dico_RMSD_moy["RMSDlist"],max(dico_RMSD_moy["RMSDlist"]),3)
+    writefile_local(dico_RMSD_moy,dicoEnf) 
     
-    
+
+#creer des classes
+def createClass(liste, bestscore, nbcl) :
+    """but : un dictionnaire permettant de classer les elements d'une liste en nombre de classes que les utilisateurs souhaitaient
+    input : liste, maximum de la liste, nombre de classes
+    output : dico contenant chaque element de la liste comme cle, et sa classe comme valeur
+    """
+    classe={}#dictionnaire de la classe aux elements
+    compteur=0
+    seuil=0
+    while len(classe) != nbcl:
+        compteur=compteur+1
+        classe[compteur]=[]
+        seuil=(nbcl-compteur)*(bestscore/nbcl)
+        for element in liste:
+            if element >= seuil:
+                classe[compteur].append(element)
+    dico_etoclass={}# dictionnaire d'element a la classe
+    for key in classe:
+        for elem in classe[key]:
+            if not elem in dico_etoclass:
+                dico_etoclass[elem]=key
+            
+    return dico_etoclass    
     ######Analyse des resultats################################
 
     #Residus presents dans les regions flexibles
@@ -395,17 +408,17 @@ def Local(fichier):
     
     #=>On met dans une liste tous les residus dont le RMSD est inferieur au seuil
     #=>Et dans une autre tous les residus dont le RMSD est superieur au seuil
-    inf_seuil=[]
-    sup_seuil=[]
+    #~ inf_seuil=[]
+    #~ sup_seuil=[]
 
-    for i in range(len(name)):
-        if valeurs[i]<=2:  #si la valeur est inferieure au seuil
-            inf_seuil.append(name[i])
-        if valeurs[i]>2: #Sinon
-            sup_seuil.append(name[i])
+    #~ for i in range(len(name)):
+        #~ if valeurs[i]<=2:  #si la valeur est inferieure au seuil
+            #~ inf_seuil.append(name[i])
+        #~ if valeurs[i]>2: #Sinon
+            #~ sup_seuil.append(name[i])
 
-    print inf_seuil
-    print sup_seuil
+    #~ print inf_seuil
+    #~ print sup_seuil
     
     
              
