@@ -196,12 +196,11 @@ def RMSDlocal(dico1,ref): #Calcule pour chaque residu le RMSD et renvoie le RMSD
     #les dicos comme arguments
     flex_res={} #dico ayant nom de residu comme cle et son RMSD de chaque conformation comme valeur
     flex_res["residulist"]=[]
+    dico_moy={}
+    
     for conformation in dico1:
         for chain in dico1[conformation]["chains"]:
             for res in dico1[conformation][chain]["reslist"]:
-                #~ flex_res[res].append(res)
-                
-
                 delta=[]
                 for atom in dico1[conformation][chain][res]["atomlist"]:
                     x1=float(dico1[conformation][chain][res][atom]["x"])
@@ -223,9 +222,10 @@ def RMSDlocal(dico1,ref): #Calcule pour chaque residu le RMSD et renvoie le RMSD
 
     for res in flex_res.keys():
         if res !="residulist":
-            flex_res[res]=sum(flex_res[res])/len(flex_res[res])
+            dico_moy[res]=sum(flex_res[res])/len(flex_res[res]) #Pour chaque residu, on calcule le RMSD moyen
 
-    return flex_res
+
+    return (flex_res,dico_moy)
 
 
 #calcul de giration
@@ -362,7 +362,7 @@ def writefile_glob(dico,dRMSD,dGiration):
     out.close()
 
 
-def writefile_local(dRMSD_moy,dEnf,dclasse,dclasseEnf):
+def writefile_local(dRMSD,dRMSD_moy,dEnf,dclasse,dclasseEnf):
     """but : ecrire un fichier contenant pour chaque residu le RMSD moyen ainsi que la distance moyenne de chacun des residus par rapport au centre de masse
     input: dico de RMSD moyen et dico de lenfouissement
     output: un fichier texte
@@ -370,7 +370,7 @@ def writefile_local(dRMSD_moy,dEnf,dclasse,dclasseEnf):
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
     out.write("Residue number \t\t Residue \t Mean RMSD \t\t\t Residue depth \n")
     for i in range(1,len(dRMSD_moy)):
-		out.write("%s \t\t\t %s \t\t %.12f"%(i,dRMSD_moy["residulist"][i-1],dRMSD_moy["%s"%i]))
+		out.write("%s \t\t\t %s \t\t %.12f"%(i,dRMSD["residulist"][i-1],dRMSD_moy["%s"%i]))
 		if dclasse["%s"%i]==1:
 			out.write(" *")
 		if dclasseEnf["%s"%i]==1:
@@ -423,22 +423,20 @@ def Local(fichier):
     print "Parsing:",fichier
     dico=ParsingPDB(fichier)
     list_temps=Temps(fichier)
-    dico_RMSD_moy=RMSDlocal(dico,dico_ref)
-    (dicoCM,dicoEnf)=Enfouissement(dico,dico_ref) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
+    
+    (dico_RMSD,dico_RMSD_moy)=RMSDlocal(dico,dico_ref) #2. Calcul du RMSD moyen pour chaque residu
+    (dicoCM,dicoEnf)=Enfouissement(dico,dico_ref) #3. enfouissement pour chaque res selon les conformations et lenfouissement moyen
     
     #On classe les residus selon leur valeurs de RMSD moyens : on veut 2 classes (1 pour les residus avec RMSD inferieur au seuil
     # et une autre pour les residus avec RMSD superieur au seuil
     #jai un peu modifie pour que cela affiche le numero du residu (plus facile pour une identification des residus apres)
-    dRMSDlocal=dict(dico_RMSD_moy)
-    del dRMSDlocal["residulist"]  
-    dclasse=createClass(dRMSDlocal,max(dRMSDlocal.values())+min(dRMSDlocal.values()),2)
-
+    #~ dRMSDlocal=dict(dico_RMSD_moy)
+    
+    dclasse=createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),2)
     dclasseEnf=createClass(dicoEnf,max(dicoEnf.values())+min(dicoEnf.values()),3) #j'avais essaye 2 classes mais il me semble qu'il y a trop de residus significatifs, du coup 3, apres il faut verifier avec pymol
 
-    writefile_local(dico_RMSD_moy,dicoEnf,dclasse,dclasseEnf)
+    writefile_local(dico_RMSD,dico_RMSD_moy,dicoEnf,dclasse,dclasseEnf)
    
-
-
     num=[]
     enf=[]
     l2=[]
@@ -447,32 +445,42 @@ def Local(fichier):
     for cle in range(len(dicoEnf)):
         num.append(cle)
 
-        #~ enf.append(dicoEnf["%s"%cle])
+    ##########################Analyses graphiques###########################################
+    
+    #Enfouissement des residus : Enfouissement moyen en fonction du numero de residus
+    num=[] #Liste qui contient le numero de residu
+    l2=[]
+    not l2
 
-
-    #choisir un residu et regarder comment varie son RMSD
-
-    ######Analyse des resultats################################
-
-    #Residus presents dans les regions flexibles
-    #RMSD en fonction de la conformation ?
-    #~ l2=[]
-    #~ not l2
-    #~ RMSD=[]
-    #~ num=[]
-
-    #~ for cle in dico_RMSD.values():
-        #~ RMSD.append(cle)
-    #~ for cle in dico_RMSD.keys():
-        #~ num.append(cle)
-    #~ graph(valeurs,list_temps,l2,"RMSD en fonction du num de residu","line")
-    #~ #Enfouissement de chaque residus
-    #~ print len(num)
-    #~ print len(dicoEnf)
+    for cle in range(len(dicoEnf)):
+        num.append(cle)
     del num[0]
     graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","line")
 
-
+    #Identification des residus presents dans les regions flexibles : RMSD moyen en fonction du numero de residu
+    num=[]
+    l2=[]
+    
+    for cle in range(len(dico_RMSD_moy)):
+        num.append(cle)
+    graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","line")
+    
+   
+    #Comparaison enfouissement des residus avec le RMSD
+    graph(dico_RMSD_moy.values(),num,dicoEnf.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","line")
+    #Les residus dont la valeur de lenfouissement diminue ont aussi une augmentation de la valeur moyenne de leur RMSD
+    
+    
+    #Regarder levolution de quelques residus au cours du temps
+    #recuperer pour un residu toutes les valeurs du RMSD et les representer en fonction du temps
+    l2=[]
+    
+    for cle in range(len(dico_RMSD)): #Les valeurs sont bonnes mais pas dans lordre => (cf numero 39 comme dans la publi)=>doit etre a 0 quand  t=0
+        if cle==24:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 24 en fonction du temps","line")
+        if cle==39:
+            print dico_RMSD["%s"%cle] #Les valeurs de cette liste ne sont pas rangees dans lordre de leur apparition
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu  en fonction du temps","line")
 
 
 
