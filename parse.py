@@ -195,12 +195,12 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
     """
     #les dicos comme arguments
     flex_res={} #dico de dico qui va contenir : le numero du res + le nom du res + le RMSD associe
-    flex_res["residulist"]=[]
-    flex_res["RMSDlist"]=[]
+    dico={}
     for conformation in dico1:
         for chain in dico1[conformation]["chains"]:
             for res in dico1[conformation][chain]["reslist"]:
                 #~ flex_res[res].append(res)
+                
 
                 delta=[]
                 for atom in dico1[conformation][chain][res]["atomlist"]:
@@ -212,20 +212,22 @@ def RMSDlocal(dico1,dico2): #Calcule pour chaque residu le RMSD et renvoie le RM
                     z2=float(dico2["0"][chain][res][atom]["z"])
                     delta.append(Distance(x1,y1,z1,x2,y2,z2))#l'ensemble de distances des atomes d'un residu
 
+                 
                 if res not in flex_res.keys():#si res nest pas deja une cle
                     flex_res[res]=[]
                 flex_res[res].append(RMSD(delta)) # pour un residu donne, on ajoute son rmsd dans chaque conformation
-
+                
 
                 #Jai enlever car ke numero permet didentifier le residu
                 #~ if conformation=="0":
                     #~ flex_res["residulist"].append(dico1[conformation][chain][res]["resname"])
 
-    for i in range(1,len(flex_res)-1):
-        flex_res["RMSDlist"].append(sum(flex_res["%s"%i])/len(flex_res["%s"%i])) #Calcul du RMSD moyen que lon range dans le dico
-
-
-    return flex_res
+    #~ for i in range(1,len(flex_res)-1):
+        #~ flex_res["RMSD"].append(sum(flex_res["%s"%i])/len(flex_res["%s"%i])) #Calcul du RMSD moyen que lon range dans le dico
+        #~ del flex_res["%s" %i]
+	for res in flex_res.keys():
+		dico[res]=sum(flex_res[res])/len(flex_res[res])
+    return dico
 
 
 #calcul de giration
@@ -385,6 +387,7 @@ def Global(fichier):
     #3. et aussi calcul du rayon de giration de chaque conformation
     dico_RMSD=RMSDglobal(dico,dico_ref)
     dico_Giration=giration(dico)
+    
     writefile_glob(dico,dico_RMSD,dico_Giration)
 
     list_conformation=sorted(int(i) for i in dico.keys()) #numero de conformation trie
@@ -393,6 +396,7 @@ def Global(fichier):
     title='Evolution du RMSD en fonction du temps'
     l2=[]
     not l2
+  
 
     graph(dico_RMSD,list_temps,l2,title,'line')
 
@@ -415,20 +419,16 @@ def Local(fichier):
     dico_RMSD_moy=RMSDlocal(dico,dico_ref)
     (dicoCM,dicoEnf)=Enfouissement(dico,dico_ref) #On recupere enfouissement pour chaque res selon les conformations et lenfouissement moyen
     #graph(dicoCM,list_temps,[],"essai","line")
-
+    print dico_RMSD_moy
     #On classe les residus selon leur valeurs de RMSD moyens : on veut 2 classes (1 pour les residus avec RMSD inferieur au seuil
     # et une autre pour les residus avec RMSD superieur au seuil
     #jai un peu modifie pour que cela affiche le numero du residu (plus facile pour une identification des residus apres)
-    dclasse=createClass(dico_RMSD_moy,max(dico_RMSD_moy["RMSDlist"])-min(dico_RMSD_moy["RMSDlist"]),2)
+    dclasse=createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())-min(dico_RMSD_moy.values()),2)
     print dclasse
+    print " "
    
-    writefile_local(dico_RMSD_moy,dicoEnf)
 
-    #choisir un residu et regarder comment varie son RMSD
 
-    ######Analyse des resultats################################
-    
-    #Enfouissement moyen de chaque residus
     num=[]
     enf=[]
     l2=[]
@@ -436,13 +436,33 @@ def Local(fichier):
 
     for cle in range(len(dicoEnf)):
         num.append(cle)
-    num.remove(0) #On enleve la case 0 car sinon pas les memes tailles pour x et y
-   
+
+        #~ enf.append(dicoEnf["%s"%cle])
+
+
+    #~ writefile_local(dico_RMSD_moy,dicoEnf)
+
+    #choisir un residu et regarder comment varie son RMSD
+
+    ######Analyse des resultats################################
+
+    #Residus presents dans les regions flexibles
+    #RMSD en fonction de la conformation ?
+    #~ l2=[]
+    #~ not l2
+    #~ RMSD=[]
+    #~ num=[]
+
+    #~ for cle in dico_RMSD.values():
+        #~ RMSD.append(cle)
+    #~ for cle in dico_RMSD.keys():
+        #~ num.append(cle)
+    #~ graph(valeurs,list_temps,l2,"RMSD en fonction du num de residu","line")
+    #~ #Enfouissement de chaque residus
+    print len(num)
+    print len(dicoEnf)
+    del num[0]
     graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","line")
-    
-    #RMSD moyen en fonction du numero de residu
-   
-    #~ graph(dico_RMSD_moy,num,l2,"RMSD moyen en fonction du num de residu","line")
 
 
 
