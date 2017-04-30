@@ -244,15 +244,12 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
     return dico_Giration
 #################################################################
 #Permet de representer des graphs
-#ordonnee et abscisse sont les elements que lon veut representer : peuevnt etre des listes ou des dicos
-#ordonne2 est une duexieme ordonneee (permet de superposer 2 graphs). Si on veut representer un graph simple on met une liste vide
-
-#Rajouter les legendes !!!
 #Et mettre dans un pdf
 
-def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
+def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex,type_graph):
     """but : Representer les resultats sous forme de graphique pour les interpreter
     input :les coordonnees x,y et y2 : y2 permet de superposer 2 graphs si on le souhaite(si on veut faire un graph unique, y2 sera vide) et le type de graph (point ou line)
+    titrey et titrex sont les legendes des coordonees des axes y et x
     output : un graphique
     """
     absc=[] #Liste qui va contenir les coordonnees de labscisse
@@ -294,7 +291,8 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
         y=np.array(ordo)
         x=np.array(absc)
         plt.title(titre)
-
+        plt.xlabel(titrex)
+        plt.ylabel(titrey)
         if type_graph=="point": #Si on veut representer des points
             plt.scatter(x,y)
 
@@ -308,6 +306,9 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
         y2=np.array(ordo2)
         x=np.array(absc) #La conformation=numero du modele
         plt.title(titre)
+        plt.xlabel(titrex)
+        plt.ylabel(titrey)
+        
 
         if type_graph =="point":
             plt.scatter(x,y,c='red')
@@ -319,7 +320,9 @@ def graph(ordonnee,abscisse,ordonne2,titre,type_graph):
 
 
      #On affiche le graph
+   
     plt.show()
+    
 
 #creer des classes
 def createClass(dico, bestscore, nbcl) :
@@ -369,14 +372,14 @@ def writefile_local(residulist,dRMSD_moy,dEnf,dclasse,dclasseEnf):
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
     out.write("Residue number \t\t Residue \t Mean RMSD \t\t\t Residue depth \n")
     for i in range(1,len(dRMSD_moy)+1):
-		out.write("%s \t\t\t %s \t\t %.12f"%(i,residulist[i-1],dRMSD_moy["%s"%i]))
-		if dclasse["%s"%i]==1:
-			out.write(" *")
-		if dclasseEnf["%s"%i]==1:
-			out.write(" \t\t %.12f *\n"%dEnf["%s"%i])
-		else:
-			out.write(" \t\t %.12f \n"%dEnf["%s"%i])
-		
+        out.write("%s \t\t\t %s \t\t %.12f"%(i,residulist[i-1],dRMSD_moy["%s"%i]))
+        if dclasse["%s"%i]==1:
+            out.write(" *")
+        if dclasseEnf["%s"%i]==1:
+            out.write(" \t\t %.12f *\n"%dEnf["%s"%i])
+        else:
+            out.write(" \t\t %.12f \n"%dEnf["%s"%i])
+        
 
     out.close()
 
@@ -402,17 +405,15 @@ def Global(fichier):
     title='Evolution du RMSD en fonction du temps'
     l2=[]
     not l2
-  
-
-    graph(dico_RMSD,list_temps,l2,title,'line')
+    graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (s)",'line')
 
     #Variation du rayon de giration en fonction du temps
     title='Evolution du rayon de giration en fonction du temps'
-    graph(dico_Giration,list_temps,l2,title,'line')
+    graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (s)",'line')
 
     #Variation du RMSD et Giration en fonction de la conformation
-    graph(dico_RMSD,list_conformation,dico_Giration,title,"line")
     title='Variation RMSD/Giration en fonction de la conformation'
+    graph(dico_RMSD,list_conformation,dico_Giration,title,"[RMSD (rouge),Giration (bleu)]","conformation","line")
 
 
 def Local(fichier):
@@ -428,21 +429,13 @@ def Local(fichier):
     
     #On classe les residus selon leur valeurs de RMSD moyens : on veut 2 classes (1 pour les residus avec RMSD inferieur au seuil
     # et une autre pour les residus avec RMSD superieur au seuil
-    #jai un peu modifie pour que cela affiche le numero du residu (plus facile pour une identification des residus apres)
-    #~ dRMSDlocal=dict(dico_RMSD_moy)
     
     dclasse=createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),2)
     dclasseEnf=createClass(dicoEnf,max(dicoEnf.values())+min(dicoEnf.values()),3) #j'avais essaye 2 classes mais il me semble qu'il y a trop de residus significatifs, du coup 3, apres il faut verifier avec pymol
 
     writefile_local(dico_RMSD["residulist"],dico_RMSD_moy,dicoEnf,dclasse,dclasseEnf)
    
-    num=[]
-    enf=[]
-    l2=[]
-    not l2
-
-    for cle in range(len(dicoEnf)):
-        num.append(cle)
+  
 
     ##########################Analyses graphiques###########################################
     
@@ -454,7 +447,7 @@ def Local(fichier):
     for cle in range(len(dicoEnf)):
         num.append(cle)
     del num[0]
-    graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","line")
+    graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","Enfouissement","residu","line")
 
     #Identification des residus presents dans les regions flexibles : RMSD moyen en fonction du numero de residu
     num=[]
@@ -462,25 +455,32 @@ def Local(fichier):
     
     for cle in range(len(dico_RMSD_moy)):
         num.append(cle)
-    graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","line")
+    graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen","residu","line")
     
    
     #Comparaison enfouissement des residus avec le RMSD
-    graph(dico_RMSD_moy.values(),num,dicoEnf.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","line")
+    graph(dico_RMSD_moy.values(),num,dicoEnf.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSDmoyen(rouge),Enfouissement(bleu)]","residu","line")
     #Les residus dont la valeur de lenfouissement diminue ont aussi une augmentation de la valeur moyenne de leur RMSD
     
     
-    #Regarder levolution de quelques residus au cours du temps
+    #Regarder levolution de quelques residus au cours du temps (cf residu pris dans la publi)
     #recuperer pour un residu toutes les valeurs du RMSD et les representer en fonction du temps
     l2=[]
-    
-    for cle in range(1,len(dico_RMSD)+1): #Les valeurs sont bonnes mais pas dans lordre => (cf numero 39 comme dans la publi)=>doit etre a 0 quand  t=0
-        #j'ai modifie un truc dans RMSDlocal, normalement ils ont dans l'ordre maintenant
-        if cle==24:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 24 en fonction du temps","line")
+   
+    for cle in range(1,len(dico_RMSD)+1):
+        if cle==76:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu glu76 en fonction du temps","RMSD","temps(s)","line")
         if cle==39:
-            print dico_RMSD["%s"%cle] #Les valeurs de cette liste ne sont pas rangees dans lordre de leur apparition
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu  en fonction du temps","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu asp 39 en fonction du temps","RMSD","temps(s)","line")
+        if cle==15:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu Lys 15 en fonction du temps","RMSD","temps(s)","line")
+        if cle==17:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 17 en fonction du temps","RMSD","temps(s)","line")
+        if cle==68:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 68 en fonction du temps","RMSD","temps(s)","line")
+        if cle==45:
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 45 en fonction du temps","RMSD","temps(s)","line")
+            
 
 
 
