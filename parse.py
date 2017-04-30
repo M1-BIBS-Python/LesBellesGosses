@@ -405,11 +405,11 @@ def Global(fichier):
     title='Evolution du RMSD en fonction du temps'
     l2=[]
     not l2
-    graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (s)",'line')
+    graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (ps)",'line')
 
     #Variation du rayon de giration en fonction du temps
     title='Evolution du rayon de giration en fonction du temps'
-    graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (s)",'line')
+    graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (ps)",'line')
 
     #Variation du RMSD et Giration en fonction de la conformation
     title='Variation RMSD/Giration en fonction de la conformation'
@@ -447,7 +447,7 @@ def Local(fichier):
     for cle in range(len(dicoEnf)):
         num.append(cle)
     del num[0]
-    graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","Enfouissement","residu","line")
+    graph(dicoEnf,num,l2,"Enfouissement moyen en fonction du numero de res","Enfouissement ","residu","line")
 
     #Identification des residus presents dans les regions flexibles : RMSD moyen en fonction du numero de residu
     num=[]
@@ -455,7 +455,7 @@ def Local(fichier):
     
     for cle in range(len(dico_RMSD_moy)):
         num.append(cle)
-    graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen","residu","line")
+    graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu","line")
     
    
     #Comparaison enfouissement des residus avec le RMSD
@@ -469,17 +469,17 @@ def Local(fichier):
    
     for cle in range(1,len(dico_RMSD)+1):
         if cle==76:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu glu76 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu glu76 en fonction du temps","RMSD (A)","temps(ps)","line")
         if cle==39:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu asp 39 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu asp 39 en fonction du temps","RMSD (A)","temps(ps)","line")
         if cle==15:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu Lys 15 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu Lys 15 en fonction du temps","RMSD (A)","temps(ps)","line")
         if cle==17:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 17 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 17 en fonction du temps","RMSD (A)","temps(ps)","line")
         if cle==68:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 68 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 68 en fonction du temps","RMSD (A)","temps(ps)","line")
         if cle==45:
-            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 45 en fonction du temps","RMSD","temps(s)","line")
+            graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 45 en fonction du temps","RMSD (A)","temps(ps)","line")
             
 
 
