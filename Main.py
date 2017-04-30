@@ -8,7 +8,7 @@ Description : Projet Barstar
 
 import argparse,os,glob,shutil,sys
 import Global as Global
-#~ import Local as Local
+import local as Local
 import StructureTools as ST
 
 ########################################################
@@ -48,6 +48,7 @@ os.mkdir("%s/PythonProgResults"%path)
 #                       Main
 #########################################################
 dico_ref=ST.ParsingPDB("start_prot_only.pdb")#dictionnaire de reference de la structure d'origine
+
 if (analyse == "global"): #si vous voulez seulement une analyse globale
     for fichier in fichiers:
         if fichier!="start_prot_only.pdb":
@@ -56,7 +57,7 @@ if (analyse == "global"): #si vous voulez seulement une analyse globale
 elif (analyse == "local"): #si vous voulez seulement une analyse locale
     for fichier in fichiers:
         if fichier!="start_prot_only.pdb":
-            Local.Local(fichier)
+            Local.Local(fichier,dico_ref,path)
             
 else : #si vous voulez a la fois une analyse globale et une analyse locale
     for fichier in fichiers:

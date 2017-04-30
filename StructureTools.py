@@ -4,6 +4,7 @@
 """
 Author : LesBellesGosses
 Description : Projet Barstar
+Structure Tools : les differentes fonctions de bases permettant de faire analyse global et local
 """
 from math import sqrt
 import numpy as np
@@ -74,6 +75,14 @@ def Temps (pdbFile):
     return(temps)
     
 
+#Calcul de distance entre deux points
+def Distance(x1,y1,z1,x2,y2,z2):
+    """but : calculer la distance dans l'espace tridimensionnelle
+    input : les coordonnees de deux points
+    output : la distance entre ces deux points
+    """
+    return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
+
 #calcul le centre de masse (en negligeant la masse atomique)
 def CM(listx,listy,listz):
     """but : calculer le centre de masse
@@ -87,34 +96,13 @@ def CM(listx,listy,listz):
     return coords
 
 
-#Calcul de distance entre deux points
-def Distance(x1,y1,z1,x2,y2,z2):
-    """but : calculer la distance dans l'espace tridimensionnelle
-    input : les coordonnees de deux points
-    output : la distance entre ces deux points
-    """
-    return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
-
-
-#calcul de RMSD
-def RMSD(list_delta):
-    """but : calculer le RMSD
-    input : une liste de distances
-    output : la valeur de RMSD
-    """
-    distcarre=[]
-    for delta in list_delta:
-        distcarre.append(delta**2)
-    return (sqrt((sum(distcarre))/float(len(list_delta))))
-
-
 #creer un dictionnaire de centre de masse pour une proteine
 def CMglob(dico):
     """but : calculer le centre de masse de chaque residu ainsi que le centre de masse de la proteine
     input : dico de proteine pour une conformation donnee (dico[conformation])
     output : un dictionnaire contenant le centre de masse de chaque residu et le centre de masse de la proteine
     """
-    globx=[] #list permet de stocker le x de tous les atomes d'une prot
+    globx=[] #liste qui permet de stocker le x de tous les atomes d'une prot
     globy=[]
     globz=[]
     glob={}
@@ -136,10 +124,23 @@ def CMglob(dico):
     glob["prot"]=CM(globx,globy,globz)
     return glob # dico contient le CM de chaque residu et le CM de la prot
  
+ 
+#calcul de RMSD
+def RMSD(list_delta):
+    """but : calculer le RMSD
+    input : une liste de distances
+    output : la valeur de RMSD
+    """
+    distcarre=[]
+    for delta in list_delta:
+        distcarre.append(delta**2)
+    return (sqrt((sum(distcarre))/float(len(list_delta))))
+
+
     
 #creer des classes
 def createClass(dico, bestscore, nbcl) :
-    """but : un dictionnaire permettant de classer les valeurs d'un dictionnaire en nombre de classes que les utilisateurs souhaitaient
+    """but : un dictionnaire permettant de classer les valeurs d'un dictionnaire en nombre de classes que les utilisateurs souhaitent
     input : dictionnaire, maximum de la liste, nombre de classes
     output : dictionnaire contenant chaque element de la liste comme cle, et sa classe comme valeur
     """
@@ -165,11 +166,12 @@ def createClass(dico, bestscore, nbcl) :
     return dico_etoclass
 
     
-def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex,type_graph):
+def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex):
     """but : Representer les resultats sous forme de graphique pour les interpreter
-    input :les coordonnees x,y et y2 : y2 permet de superposer 2 graphs si on le souhaite(si on veut faire un graph unique, y2 sera vide) et le type de graph (point ou line)
+    input :les coordonnees x=ordonnee,y=abscisse et y2=ordonne2 : y2 permet de superposer 2 graphs si on le souhaite(si on veut faire un graph unique, y2 sera vide) 
     titrey et titrex sont les legendes des coordonees des axes y et x
-    output : un graphique
+    x,y et y2 peuvent etre des dictionnaires a condition que leur valeurs ne soient pas des cles
+    output : un graphique =>sous forme de line (pas point)
     """
     absc=[] #Liste qui va contenir les coordonnees de labscisse
     ordo=[] #Liste qui va contenir les coordonnnees de lordonees
@@ -212,11 +214,8 @@ def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex,type_graph):
         plt.title(titre)
         plt.xlabel(titrex)
         plt.ylabel(titrey)
-        if type_graph=="point": #Si on veut representer des points
-            plt.scatter(x,y)
-
-        if type_graph=="line": #Si on veut representer des lignes
-            plt.plot(x,y)
+        
+        plt.plot(x,y)
 
 
     #Sinon on fait des graphs superposes
@@ -228,16 +227,9 @@ def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex,type_graph):
         plt.xlabel(titrex)
         plt.ylabel(titrey)
         
-
-        if type_graph =="point":
-            plt.scatter(x,y,c='red')
-            plt.scatter(x,y2,c='blue')
-
-        if type_graph=="line":
-            plt.plot(x,y,c='red')
-            plt.plot(x,y2,c='blue')
+        plt.plot(x,y,c='red')
+        plt.plot(x,y2,c='blue')
 
 
      #On affiche le graph
-   
     plt.show()

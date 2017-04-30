@@ -4,6 +4,7 @@
 """
 Author : LesBellesGosses
 Description : Projet Barstar
+Analyse Globale
 """
 
 from math import sqrt
@@ -42,7 +43,7 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
         for res in dico_CM:
             if res != "residulist":
                 list_dist.append(ST.Distance(dico_CM["prot"][0],dico_CM["prot"][1],dico_CM["prot"][2],dico_CM[res][0],dico_CM[res][1],dico_CM[res][2]))
-        dico_Giration[key]=max(list_dist)
+        dico_Giration[key]=max(list_dist) #on prend la distance maximale
     return dico_Giration
 
     
@@ -55,25 +56,28 @@ def Global(fichier,dico_ref,path):
     list_temps=ST.Temps(fichier)
 
     #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
-    #3. et aussi calcul du rayon de giration de chaque conformation
+    #3. et calcul du rayon de giration de chaque conformation
     dico_RMSD=RMSDglobal(dico,dico_ref)
     dico_Giration=giration(dico)
     
     writefile.writefile_glob(dico,dico_RMSD,dico_Giration,fichier,path)
 
+
+	####Analyse : Representations graphiques ###################
+    
     list_conformation=sorted(int(i) for i in dico.keys()) #numero de conformation trie
 
     #Variation du RMSD en fonction du temps
     title='Evolution du RMSD en fonction du temps'
     l2=[]
     not l2
-    ST.graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (ps)",'line')
+    ST.graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (ps)")
 
     #Variation du rayon de giration en fonction du temps
     title='Evolution du rayon de giration en fonction du temps'
-    ST.graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (ps)",'line')
+    ST.graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (ps)")
 
     #Variation du RMSD et Giration en fonction de la conformation
     title='Variation RMSD/Giration en fonction de la conformation'
-    ST.graph(dico_RMSD,list_conformation,dico_Giration,title,"[RMSD (rouge),Giration (bleu)]","conformation","line")
+    ST.graph(dico_RMSD,list_conformation,dico_Giration,title,"[RMSD (rouge),Giration (bleu)]","conformation")
 

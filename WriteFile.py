@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 #-*- coding : utf8 -*-
 
+"""
+Author : LesBellesGosses
+Description : Projet Barstar
+Ecriture dans un fichier de sortie
+"""
+
 import os
 
 def writefile_glob(dico,dRMSD,dGiration,fichier,path):
     """but : ecrire un fichier de sortie contenant pour chaque conformation et pour la structure dorigine les rayon de giration et le RMSD correspondant
-    input : le dico de la proteine, le dico de RMSD et le dico du rayon de giration
+    input : le dico de la proteine, le dico de RMSD et le dico du rayon de giration,les fichiers analyses et le chemin
     output: un fichier texte qui possede pour chaque conformation, le RMSD et le rayon de giration
     """
     out=open("%s/PythonProgResults/GlobalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
@@ -17,7 +23,8 @@ def writefile_glob(dico,dRMSD,dGiration,fichier,path):
 
 def writefile_local(residulist,dRMSD_moy,dEnf,dclasse,dclasseEnf,fichier,path):
     """but : ecrire un fichier contenant pour chaque residu le RMSD moyen ainsi que la distance moyenne de chacun des residus par rapport au centre de masse
-    input: dico de RMSD moyen et dico de lenfouissement
+    input: le nom des residus, dico de RMSD moyen et dico de lenfouissement, les fichiers analyses et le chemin
+    dclasse et dclasseEnf sont ajoutes pour identifier par * les residus qui sont a la surface ou dans les regions flexibles
     output: un fichier texte
     """
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
