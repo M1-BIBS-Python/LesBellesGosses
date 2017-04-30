@@ -390,6 +390,7 @@ def Global(fichier):
     """
     print "Parsing:",fichier
     dico=ParsingPDB(fichier) #1/ Parse le fichier pdb
+    print dico
     list_temps=Temps(fichier)
 
     #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
