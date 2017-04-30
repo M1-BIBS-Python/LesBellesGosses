@@ -33,7 +33,7 @@ def ParsingPDB (pdbFile):
 
             chain = line[21]
             if chain not in dico_models[dico_molecule].keys():
-                dico_models[dico_molecule][chain] = {} # je me demande si on garde la cle chain car il n'y pas de chain dans fichier pdb
+                dico_models[dico_molecule][chain] = {} 
                 dico_models[dico_molecule]["chains"].append(chain)
                 dico_models[dico_molecule][chain]["reslist"]=[]
 
@@ -99,7 +99,7 @@ def CM(listx,listy,listz):
 #creer un dictionnaire de centre de masse pour une proteine
 def CMglob(dico):
     """but : calculer le centre de masse de chaque residu ainsi que le centre de masse de la proteine
-    input : dico de proteine pour une conformation donnee (dico[conformation])
+    input : dictionnaire de proteine pour une conformation donnee (dico[conformation])
     output : un dictionnaire contenant le centre de masse de chaque residu et le centre de masse de la proteine
     """
     globx=[] #liste qui permet de stocker le x de tous les atomes d'une prot
@@ -141,7 +141,7 @@ def RMSD(list_delta):
 #creer des classes
 def createClass(dico, bestscore, nbcl) :
     """but : un dictionnaire permettant de classer les valeurs d'un dictionnaire en nombre de classes que les utilisateurs souhaitent
-    input : dictionnaire, maximum de la liste, nombre de classes
+    input : dictionnaire, valeur maximale, nombre de classes
     output : dictionnaire contenant chaque element de la liste comme cle, et sa classe comme valeur
     """
     classe={} #dictionnaire de la classe aux elements
@@ -165,7 +165,8 @@ def createClass(dico, bestscore, nbcl) :
 
     return dico_etoclass
 
-    
+
+#fonction pour tracer les graphes    
 def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex):
     """but : Representer les resultats sous forme de graphique pour les interpreter
     input :les coordonnees x=ordonnee,y=abscisse et y2=ordonne2 : y2 permet de superposer 2 graphs si on le souhaite(si on veut faire un graph unique, y2 sera vide) 

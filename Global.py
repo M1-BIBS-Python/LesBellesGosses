@@ -7,16 +7,15 @@ Description : Projet Barstar
 Analyse Globale
 """
 
-from math import sqrt
 import WriteFile as writefile
 import StructureTools as ST
 
 
 #calcul de RMSD global
 def RMSDglobal(dico,dico_ref):
-    """but : Calculer le RMSD entre chaque conformation et la proteine de reference
-    input : dico de la proteine et dico de la proteine de la structure dorigine
-    output : dico contenant pour chaque res de chaque conformation le RMSD
+    """but : Calculer le RMSD entre chaque conformation et la structure d'origine
+    input : dictionnaire de la proteine et dico de la proteine de la structure d'origine
+    output : dictionnaire contenant pour chaque conformation le RMSD global
     """
     dico_RMSD={}
     for key in dico:
@@ -29,16 +28,14 @@ def RMSDglobal(dico,dico_ref):
 
  
 #calcul de giration
-def giration(dico):#c'est le dico[key] qu'on passe ici
-    """but : calculer le rayon de giration d'une proteine
-    input : un dico de proteine d'une conformation donnee
+def giration(dico):
+    """but : calculer le rayon de giration de chaque conformation
+    input : un dictionnaire de proteine
     output : la valeur du rayon de giration
     """
     dico_Giration={}
-    print dico.keys()
     for key in dico:
         dico_CM=ST.CMglob(dico[key])
-        print dico_CM
         list_dist=[]
         for res in dico_CM:
             if res != "residulist":
@@ -49,14 +46,14 @@ def giration(dico):#c'est le dico[key] qu'on passe ici
     
 def Global(fichier,dico_ref,path):
     """but: Analyse des changements conformationnels globaux de la proteine
-    input:lensemble des fichiers de donnees presents dans le repertoire
+    input: Un fichier pdb, un dictionnaire de la structure d'origine, un chemin de repertoire que l'utilisateur avait fourni
     """
     print "Parsing:",fichier
-    dico=ST.ParsingPDB(fichier) #1/ Parse le fichier pdb
+    dico=ST.ParsingPDB(fichier) #Parse le fichier pdb
     list_temps=ST.Temps(fichier)
 
-    #2.calcul RMSD de chaque conformation par rapport a la structure d'origine
-    #3. et calcul du rayon de giration de chaque conformation
+    #calcul RMSD de chaque conformation par rapport a la structure d'origine
+    #et calcul du rayon de giration de chaque conformation
     dico_RMSD=RMSDglobal(dico,dico_ref)
     dico_Giration=giration(dico)
     
