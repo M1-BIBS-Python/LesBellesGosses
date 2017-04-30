@@ -11,7 +11,6 @@ from math import sqrt
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse,os,glob,shutil,sys
-from matplotlib.backends.backend_pdf import PdfPages
 
 #parser un fichier pdb
 def ParsingPDB (pdbFile):
@@ -141,6 +140,7 @@ def CMglob(dico):
     return glob # dico contient le CM de chaque residu et le CM de la prot
 
 
+#calcul de RMSD global
 def RMSDglobal(dico,dico_ref):
     """but : Calculer le RMSD entre chaque conformation et la proteine de reference
     input : dico de la proteine et dico de la proteine de la structure dorigine
@@ -154,6 +154,7 @@ def RMSDglobal(dico,dico_ref):
                 list_delta.append(Distance(float(dico[key][chain][res]['CA']['x']),float(dico[key][chain][res]['CA']['y']),float(dico[key][chain][res]['CA']['z']),float(dico_ref['0'][chain][res]['CA']['x']),float(dico_ref['0'][chain][res]['CA']['y']),float(dico_ref['0'][chain][res]['CA']['z']))) # compare dist entre les Ca
         dico_RMSD[key]=RMSD(list_delta)
     return dico_RMSD
+
 
 #Enfouissement de chaque residu dans une proteine (pour l'analyse locale)
 def Enfouissement(dico,dico_ref):#c'est le dico qu'on passe ici
@@ -179,7 +180,7 @@ def Enfouissement(dico,dico_ref):#c'est le dico qu'on passe ici
 
         #2. Calcule de la distance moyenne
     moy={}
-    for res in sorted(glob.keys()):
+    for res in sorted(glob.keys()): #pk sorted? sachant que tes cles sont str, qui fait de ton sorted n'a pas de sens si tu veux des chiffres en ordres
 
         if res != "residulist" and res!="prot":
             moy[res]= sum(glob[res])/len(glob[res])
@@ -198,16 +199,16 @@ def RMSDlocal(dico1,ref): #Calcule pour chaque residu le RMSD et renvoie le RMSD
     flex_res["residulist"]=[]
     dico_moy={}
     
-    for conformation in dico1:
-        for chain in dico1[conformation]["chains"]:
-            for res in dico1[conformation][chain]["reslist"]:
+    for conformation in range(len(dico1)):
+        for chain in dico1["%s"%conformation]["chains"]:
+            for res in dico1["%s"%conformation][chain]["reslist"]:
                 delta=[]
-                for atom in dico1[conformation][chain][res]["atomlist"]:
-                    x1=float(dico1[conformation][chain][res][atom]["x"])
+                for atom in dico1["%s"%conformation][chain][res]["atomlist"]:
+                    x1=float(dico1["%s"%conformation][chain][res][atom]["x"])
                     x2=float(ref["0"][chain][res][atom]["x"])
-                    y1=float(dico1[conformation][chain][res][atom]["y"])
+                    y1=float(dico1["%s"%conformation][chain][res][atom]["y"])
                     y2=float(ref["0"][chain][res][atom]["y"])
-                    z1=float(dico1[conformation][chain][res][atom]["z"])
+                    z1=float(dico1["%s"%conformation][chain][res][atom]["z"])
                     z2=float(ref["0"][chain][res][atom]["z"])
                     delta.append(Distance(x1,y1,z1,x2,y2,z2))#l'ensemble de distances des atomes d'un residu
                  
@@ -215,10 +216,8 @@ def RMSDlocal(dico1,ref): #Calcule pour chaque residu le RMSD et renvoie le RMSD
                     flex_res[res]=[]
                 flex_res[res].append(RMSD(delta)) # pour un residu donne, on ajoute son rmsd dans chaque conformation
                 
-                #Jai enlever car ke numero permet didentifier le residu
-                #oui, mais je l'aurai besoin pour faire le fichier de sortie et c'est aussi plus interessant de savoir il y a quoi comme residus dans une chaine mais pas uniquement leur numero
-                if conformation=="0":
-                    flex_res["residulist"].append(dico1[conformation][chain][res]["resname"])
+                if conformation==0:
+                    flex_res["residulist"].append(dico1["%s"%conformation][chain][res]["resname"])
 
     for res in flex_res.keys():
         if res !="residulist":
@@ -362,15 +361,15 @@ def writefile_glob(dico,dRMSD,dGiration):
     out.close()
 
 
-def writefile_local(dRMSD,dRMSD_moy,dEnf,dclasse,dclasseEnf):
+def writefile_local(residulist,dRMSD_moy,dEnf,dclasse,dclasseEnf):
     """but : ecrire un fichier contenant pour chaque residu le RMSD moyen ainsi que la distance moyenne de chacun des residus par rapport au centre de masse
     input: dico de RMSD moyen et dico de lenfouissement
     output: un fichier texte
     """
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
     out.write("Residue number \t\t Residue \t Mean RMSD \t\t\t Residue depth \n")
-    for i in range(1,len(dRMSD_moy)):
-		out.write("%s \t\t\t %s \t\t %.12f"%(i,dRMSD["residulist"][i-1],dRMSD_moy["%s"%i]))
+    for i in range(1,len(dRMSD_moy)+1):
+		out.write("%s \t\t\t %s \t\t %.12f"%(i,residulist[i-1],dRMSD_moy["%s"%i]))
 		if dclasse["%s"%i]==1:
 			out.write(" *")
 		if dclasseEnf["%s"%i]==1:
@@ -435,7 +434,7 @@ def Local(fichier):
     dclasse=createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),2)
     dclasseEnf=createClass(dicoEnf,max(dicoEnf.values())+min(dicoEnf.values()),3) #j'avais essaye 2 classes mais il me semble qu'il y a trop de residus significatifs, du coup 3, apres il faut verifier avec pymol
 
-    writefile_local(dico_RMSD,dico_RMSD_moy,dicoEnf,dclasse,dclasseEnf)
+    writefile_local(dico_RMSD["residulist"],dico_RMSD_moy,dicoEnf,dclasse,dclasseEnf)
    
     num=[]
     enf=[]
@@ -475,7 +474,8 @@ def Local(fichier):
     #recuperer pour un residu toutes les valeurs du RMSD et les representer en fonction du temps
     l2=[]
     
-    for cle in range(len(dico_RMSD)): #Les valeurs sont bonnes mais pas dans lordre => (cf numero 39 comme dans la publi)=>doit etre a 0 quand  t=0
+    for cle in range(1,len(dico_RMSD)+1): #Les valeurs sont bonnes mais pas dans lordre => (cf numero 39 comme dans la publi)=>doit etre a 0 quand  t=0
+        #j'ai modifie un truc dans RMSDlocal, normalement ils ont dans l'ordre maintenant
         if cle==24:
             graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 24 en fonction du temps","line")
         if cle==39:
