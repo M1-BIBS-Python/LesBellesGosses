@@ -106,7 +106,6 @@ def Local(fichier,dico_ref,path):
     #Enfouissement des residus : Enfouissement moyen en fonction du numero de residus
     num=[] #Liste qui contient le numero de residu
     l2=[]
-    not l2
 
     for cle in range(len(dicoEnf_moy)):
         num.append(cle)
@@ -119,11 +118,11 @@ def Local(fichier,dico_ref,path):
     
     for cle in range(len(dico_RMSD_moy)):
         num.append(cle)
-    
-    ST.graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu")
+    del num[0]
+    ST.graph(dico_RMSD_moy,num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu")
     
     #Comparaison enfouissement des residus avec le RMSD
-    ST.graph(dico_RMSD_moy.values(),num,dicoEnf_moy.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSD moyen(rouge),Enfouissement(bleu)]","residu")
+    ST.graph(dico_RMSD_moy,num,dicoEnf_moy,"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSD moyen(rouge),Enfouissement(bleu)]","residu")
     
     #Regarder l'evolution de quelques residus au cours du temps (cf residu pris dans la publi)
     #recuperer pour un residu toutes les valeurs du RMSD et les representer en fonction du temps
