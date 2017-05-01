@@ -24,7 +24,7 @@ def writefile_glob(dico,dRMSD,dGiration,fichier,path):
 def writefile_local(residulist,dRMSD_moy,dEnf,dclasse,dclasseEnf,fichier,path):
     """but : ecrire un fichier contenant pour chaque residu le RMSD moyen, ainsi que la distance moyenne de chacun des residus par rapport au centre de masse (enfouissement)
     input: le nom des residus, dictionnaire de RMSD moyen et dictionnaire de l'enfouissement, le nom du fichier et le chemin du repertoire
-    dclasse et dclasseEnf sont ajoutes pour identifier par * les residus probablement les plus enfouis ou les plus flexibles
+    dclasse et dclasseEnf sont ajoutes pour identifier par * les residus probablement les plus a la surface ou les plus flexibles
     output: un fichier texte
     """
     out=open("%s/PythonProgResults/LocalAnalysis_%s"%(path,os.path.basename(fichier)),"w")
@@ -33,7 +33,7 @@ def writefile_local(residulist,dRMSD_moy,dEnf,dclasse,dclasseEnf,fichier,path):
         out.write("%s \t\t\t %s \t\t %.12f"%(i,residulist[i-1],dRMSD_moy["%s"%i]))
         if dclasse["%s"%i]==1: #identifier les residus les plus flexibles (ils sont de classe 1)
             out.write(" *")
-        if dclasseEnf["%s"%i]==max(dclasseEnf.values()): #identifier les residus les plus enfouis (= ceux qui ont un numero de classe maximal)
+        if dclasseEnf["%s"%i]==1: #identifier les residus les plus a la surface (ils sont de classe 1)
             out.write(" \t\t %.12f *\n"%dEnf["%s"%i])
         else:
             out.write(" \t\t %.12f \n"%dEnf["%s"%i])
