@@ -15,7 +15,7 @@ import StructureTools as ST
 def Enfouissement(dico,dico_ref):
     """but : etude de l'enfouissement pour toutes les conformations d'une proteine
     input : dictionnaire de proteine et dictionnaire de proteine de la structure d'origine
-    output : une tuple contenant un dictionnaire de centre de masse d'un residus (calcule sur toutes les conformations) ainsi qu'un dictionnaire de valeur de l'enfouissement moyenne
+    output : un dictionnaire de valeur de l'enfouissement moyenne
     """
     dGlob={}
     dGlob_ref=ST.CMglob(dico_ref["0"])
@@ -48,7 +48,7 @@ def Enfouissement(dico,dico_ref):
 def RMSDlocal(dico1,ref): #Calcule pour chaque residu le RMSD et renvoie le RMSD moyen pour chaque residu
     """but : calculer le RMSD moyen de chaque residu
     input : un dictionnaire de proteine et un dictionnaire de structure d'origine
-    output : un dictionnaire contenant pour chaque residu les RMSD de chaque conformation et un dico de RMSD moyen (pour chaque residu, un RMSD moyen)
+    output : un dictionnaire contenant pour chaque residu les RMSD de chaque conformation et un dictionnaire de RMSD moyen (pour chaque residu, un RMSD moyen)
     """
     #les dictionnaires comme arguments
     dFlex_res={} #dictionnaire ayant nom de residu comme cle et son RMSD de chaque conformation comme valeur
@@ -111,7 +111,7 @@ def Local(fichier,dico_ref,path):
     for cle in range(len(dicoEnf_moy)):
         num.append(cle)
     del num[0]
-    ST.graph(dicoEnf_moy,num,l2,"Enfouissement moyen en fonction du numero de res","Enfouissement (A) ","residu")
+    ST.graph(dicoEnf_moy,num,l2,"Enfouissement moyen en fonction du numero de residus","Enfouissement (A) ","residu")
 
     #Identification des residus presents dans les regions flexibles : RMSD moyen en fonction du numero de residu
     num=[]
@@ -123,7 +123,7 @@ def Local(fichier,dico_ref,path):
     ST.graph(dico_RMSD_moy.values(),num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu")
     
     #Comparaison enfouissement des residus avec le RMSD
-    ST.graph(dico_RMSD_moy.values(),num,dicoEnf_moy.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSDmoyen(rouge),Enfouissement(bleu)]","residu")
+    ST.graph(dico_RMSD_moy.values(),num,dicoEnf_moy.values(),"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSD moyen(rouge),Enfouissement(bleu)]","residu")
     
     #Regarder l'evolution de quelques residus au cours du temps (cf residu pris dans la publi)
     #recuperer pour un residu toutes les valeurs du RMSD et les representer en fonction du temps
@@ -131,11 +131,11 @@ def Local(fichier,dico_ref,path):
    
     for cle in range(1,len(dico_RMSD)+1):
         if cle==76:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu glu76 en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu glu 76 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==39:
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu asp 39 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==15:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu Lys 15 en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu lys 15 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==17:
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu arg 17 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==68:

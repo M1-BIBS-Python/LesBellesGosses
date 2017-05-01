@@ -19,17 +19,17 @@ def ParsingPDB (pdbFile):
     infile = open(pdbFile, "r")
     lines = infile.readlines()
 
-    dico_models={} # une cle associee a chaque conformation de la molecule
+    dico_models={} 
 
     for line in lines:
 
-        if line[:5:] == "MODEL": #Si la ligne commence par MODEL,On rajoute le numero de conformation
+        if line[:5:] == "MODEL": #Si la ligne commence par MODEL,On rajoute le numero de conformation comme cle
 
             dico_molecule=line[9:14].strip()
             dico_models[dico_molecule] = {}
             dico_models[dico_molecule]["chains"] = []
 
-        if line[:4:] == 'ATOM':                     #Si la ligne commence par ATOM
+        if line[:4:] == 'ATOM':                     #Si la ligne commence par ATOM, les sous-dictionnaires sont crees a partir de ces lignes
 
             chain = line[21]
             if chain not in dico_models[dico_molecule].keys():
@@ -83,11 +83,12 @@ def Distance(x1,y1,z1,x2,y2,z2):
     """
     return(sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2))
 
-#calcul le centre de masse (en negligeant la masse atomique)
+
+#calcul du centre de masse (en negligeant la masse atomique)
 def CM(listx,listy,listz):
     """but : calculer le centre de masse
     input : l'ensemble des abscisses, des ordonnees et des cotes en liste
-    output : une liste contenant l'abscisse, l'ordonnee et la cotes du centre de masse
+    output : une liste contenant l'abscisse, l'ordonnee et la cote du centre de masse
     """
     x=sum(listx)/float(len(listx))
     y=sum(listy)/float(len(listy))
@@ -122,7 +123,7 @@ def CMglob(dico):
             glob[res]=CM(listx,listy,listz)
             glob["residulist"].append(dico[chain][res]["resname"])
     glob["prot"]=CM(globx,globy,globz)
-    return glob # dico contient le CM de chaque residu et le CM de la prot
+    return glob # dictionnaire contient le centre de masse de chaque residu et le centre de masse de la proteine
  
  
 #calcul de RMSD
@@ -174,18 +175,17 @@ def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex):
     x,y et y2 peuvent etre des dictionnaires a condition que leur valeurs ne soient pas des cles
     output : un graphique =>sous forme de line (pas point)
     """
-    absc=[] #Liste qui va contenir les coordonnees de labscisse
-    ordo=[] #Liste qui va contenir les coordonnnees de lordonees
+    absc=[] #Liste qui va contenir les coordonnees de l'abscisse
+    ordo=[] #Liste qui va contenir les coordonnnees de l'ordonees
     ordo2=[] #Pour le cas ou on veut superposer des graphs
 
     if type(ordonnee) is list : #si cest une liste
         ordo=ordonnee
 
-    else: #sinon cest un dico
-        #j'ai trouve pk cette fct bloque pour local: les dicos ne contiennent pas la cle "0" (diff que global"), donc je propose une solution ci-dessous et au moins ca marche pour un test, apres il faut verifier si c'est correcte
+    else: #sinon c'est un dictionnaire
         if "0" in ordonnee:
             for i in range(len(ordonnee)): #on parcours le dictionnaire
-                ordo.append(ordonnee["%s"%i]) #Et on range dans une liste les differentes valeurs contenues dans le dico, dans lordre dans lesquelles on les a trouve
+                ordo.append(ordonnee["%s"%i]) #Et on range dans une liste les differentes valeurs contenues dans le dictionnaire, dans l'ordre dans lesquelles on les a trouve
         else:
             for i in range(1,len(ordonnee)):
                 ordo.append(ordonnee["%s"%i])
@@ -232,5 +232,5 @@ def graph(ordonnee,abscisse,ordonne2,titre,titrey,titrex):
         plt.plot(x,y2,c='blue')
 
 
-     #On affiche le graph
+    #On affiche le graph
     plt.show()

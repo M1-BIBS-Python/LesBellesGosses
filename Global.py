@@ -14,7 +14,7 @@ import StructureTools as ST
 #calcul de RMSD global
 def RMSDglobal(dico,dico_ref):
     """but : Calculer le RMSD entre chaque conformation et la structure d'origine
-    input : dictionnaire de la proteine et dico de la proteine de la structure d'origine
+    input : dictionnaire de la proteine et dictionnaire de la proteine de la structure d'origine
     output : dictionnaire contenant pour chaque conformation le RMSD global
     """
     dico_RMSD={}
@@ -31,7 +31,7 @@ def RMSDglobal(dico,dico_ref):
 def giration(dico):
     """but : calculer le rayon de giration de chaque conformation
     input : un dictionnaire de proteine
-    output : la valeur du rayon de giration
+    output : un dictionnaire contenant pour chaque conformation la valeur du rayon de giration associee
     """
     dico_Giration={}
     for key in dico:

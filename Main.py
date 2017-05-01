@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-p", help="Path to directory where pdb files are stored")
 parser.add_argument("-a", help="Type of analysis: global or local or both")
 args = parser.parse_args()
-if args.p == None or args.a == None: # si l'un des arguments est vide
+if args.p == None or args.a == None: #si l'un des arguments est vide
     parser.print_help()
     parser.exit()
 path=args.p
@@ -32,7 +32,7 @@ path=os.path.abspath(path)
 ########################################################
 
 #on supprime le dossier contenant les resultats de l'execution precedente (s'il existe) afin d'eviter les chevauchements
-#le dossier "PythonProgResults" sert a stocker les fichiers sortis
+#le dossier "PythonProgResults" sert a stocker les fichiers de sortie
 
 try:
     shutil.rmtree("%s/PythonProgResults"%path)
@@ -40,7 +40,7 @@ except OSError:
     pass
 
 os.chdir(path)
-fichiers=glob.iglob("*.pdb") # si le path est vers un dossier, on lira tous les fichiers pdb
+fichiers=glob.iglob("*.pdb") #si le path est vers un dossier, on lira tous les fichiers pdb
 
 os.mkdir("%s/PythonProgResults"%path)
 
@@ -62,8 +62,8 @@ elif (analyse == "local"): #si vous voulez seulement une analyse locale
 else : #si vous voulez a la fois une analyse globale et une analyse locale
     for fichier in fichiers:
         if fichier!="start_prot_only.pdb":
-            Global.Global(fichier,dico_ref)
-            Local.Local(fichier)
+            Global.Global(fichier,dico_ref,path)
+            Local.Local(fichier,dico_ref,path)
 
 
 
