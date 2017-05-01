@@ -8,7 +8,7 @@ Description : Projet Barstar
 
 import argparse,os,glob,shutil,sys
 import Global as Global
-import local as Local
+import Local as Local
 import StructureTools as ST
 
 ########################################################

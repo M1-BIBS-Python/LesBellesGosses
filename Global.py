@@ -4,7 +4,7 @@
 """
 Author : LesBellesGosses
 Description : Projet Barstar
-Analyse Globale
+Analyse Globale: etude de la deviation et le changement du rayon de giration de Barstar au cours du temps 
 """
 
 import WriteFile as writefile

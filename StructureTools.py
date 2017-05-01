@@ -4,7 +4,7 @@
 """
 Author : LesBellesGosses
 Description : Projet Barstar
-Structure Tools : les differentes fonctions de bases permettant de faire analyse global et local
+Structure Tools : les differentes fonctions de bases permettant de faire l'analyse globale et locale
 """
 from math import sqrt
 import numpy as np
