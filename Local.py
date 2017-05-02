@@ -93,9 +93,9 @@ def Local(fichier,dico_ref,path):
     (dico_RMSD,dico_RMSD_moy)=RMSDlocal(dico,dico_ref) #1. Calcul du RMSD moyen pour chaque residu
     dicoEnf_moy=Enfouissement(dico,dico_ref) #2. Calcul d'enfouissement moyen
     
-    #On classe en 3 classes les residus selon les valeurs de RMSD moyen, en 4 classes pour les valeurs d'enfouissement
-    dclasse=ST.createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),3)
-    dclasseEnf=ST.createClass(dicoEnf_moy,max(dicoEnf_moy.values())+min(dicoEnf_moy.values()),4) 
+    #On classe en 2 classes les residus selon les valeurs de RMSD moyen, en 2 classes pour les valeurs d'enfouissement
+    dclasse=ST.createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),2)
+    dclasseEnf=ST.createClass(dicoEnf_moy,max(dicoEnf_moy.values())+min(dicoEnf_moy.values()),2) 
 
     writefile.writefile_local(dico_RMSD["residulist"],dico_RMSD_moy,dicoEnf_moy,dclasse,dclasseEnf,fichier,path)
    
@@ -139,7 +139,7 @@ def Local(fichier,dico_ref,path):
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 60(LYS) en fonction du temps","RMSD (A)","temps(ps)")
         if cle==39:
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 39 en fonction du temps","RMSD (A)","temps(ps)")
-        if cle==17:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 17(GLU) en fonction du temps","RMSD (A)","temps(ps)")
+        if cle==76:
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 76(GLU) en fonction du temps","RMSD (A)","temps(ps)")
             
 
