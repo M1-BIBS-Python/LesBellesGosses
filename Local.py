@@ -95,7 +95,7 @@ def Local(fichier,dico_ref,path):
     
     #On classe en 3 classes les residus selon les valeurs de RMSD moyen, en 4 classes pour les valeurs d'enfouissement
     dclasse=ST.createClass(dico_RMSD_moy,max(dico_RMSD_moy.values())+min(dico_RMSD_moy.values()),3)
-    dclasseEnf=ST.createClass(dicoEnf_moy,max(dicoEnf_moy.values())+min(dicoEnf_moy.values()),2) 
+    dclasseEnf=ST.createClass(dicoEnf_moy,max(dicoEnf_moy.values())+min(dicoEnf_moy.values()),4) 
 
     writefile.writefile_local(dico_RMSD["residulist"],dico_RMSD_moy,dicoEnf_moy,dclasse,dclasseEnf,fichier,path)
    
@@ -110,7 +110,7 @@ def Local(fichier,dico_ref,path):
     for cle in range(len(dicoEnf_moy)):
         num.append(cle)
     del num[0]
-    ST.graph(dicoEnf_moy,num,l2,"Enfouissement moyen en fonction du numero de residus","Enfouissement (A) ","residu")
+    ST.graph(dicoEnf_moy,num,l2,"Analyse locale : Enfouissement moyen en fonction du numero de residus","Enfouissement (A) ","residu")
 
     #Identification des residus presents dans les regions flexibles : RMSD moyen en fonction du numero de residu
     num=[]
@@ -119,7 +119,7 @@ def Local(fichier,dico_ref,path):
     for cle in range(len(dico_RMSD_moy)):
         num.append(cle)
     del num[0]
-    ST.graph(dico_RMSD_moy,num,l2,"RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu")
+    ST.graph(dico_RMSD_moy,num,l2,"Analyse locale : RMSD moyen en fonction du numero de residus","RMSDmoyen(A)","residu")
     
     #Comparaison enfouissement des residus avec le RMSD
     ST.graph(dico_RMSD_moy,num,dicoEnf_moy,"Comparaison de Enfouissement et RMSD moyen en fonction du residu","[RMSD moyen(rouge),Enfouissement(bleu)]","residu")
@@ -130,16 +130,16 @@ def Local(fichier,dico_ref,path):
    
     for cle in range(1,len(dico_RMSD)+1):
         if cle==1:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 1 en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale : Evolution du RMSD du residu 1 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==11:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 11 en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 11 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==15:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 15(LYS) en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 15(LYS) en fonction du temps","RMSD (A)","temps(ps)")
         if cle==60:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 60(LYS) en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 60(LYS) en fonction du temps","RMSD (A)","temps(ps)")
         if cle==39:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 39 en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 39 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==17:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Evolution du RMSD du residu 17(GLU) en fonction du temps","RMSD (A)","temps(ps)")
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 17(GLU) en fonction du temps","RMSD (A)","temps(ps)")
             
 

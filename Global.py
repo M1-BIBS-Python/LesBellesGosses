@@ -62,19 +62,19 @@ def Global(fichier,dico_ref,path):
 
 	####Analyse : Representations graphiques ###################
     
-    #~ list_conformation=sorted(int(i) for i in dico_RMSD.keys()) #numero de conformation trie
+    list_conformation=sorted(int(i) for i in dico_RMSD.keys()) #numero de conformation trie
 
     #Variation du RMSD en fonction du temps
-    title='Evolution du RMSD en fonction du temps'
+    title='Analyse Globale : Evolution du RMSD en fonction du temps'
     l2=[]
     not l2
     ST.graph(dico_RMSD,list_temps,l2,title,"RMSD","temps (ps)")
 
     #Variation du rayon de giration en fonction du temps
-    title='Evolution du rayon de giration en fonction du temps'
+    title='Analyse Globale : Evolution du rayon de giration en fonction du temps'
     ST.graph(dico_Giration,list_temps,l2,title,"rayon de giration","temps (ps)")
 
     #Variation du RMSD et Giration en fonction de la conformation
-    title='Variation RMSD/Giration en fonction de la conformation'
-    ST.graph(dico_RMSD,list_temps,dico_Giration,title,"[RMSD (rouge),Giration (bleu)]","conformation") #Il y autant de conformation que de mesures de temps
+    title='Analyse globale : Variation RMSD/Giration en fonction de la conformation'
+    ST.graph(dico_RMSD,list_conformation,dico_Giration,title,"[RMSD (rouge),Giration (bleu)]","conformation") #Il y autant de conformation que de mesures de temps
 
