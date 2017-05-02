@@ -129,17 +129,18 @@ def Local(fichier,dico_ref,path):
     l2=[]
    
     for cle in range(1,len(dico_RMSD)+1):
-        if cle==1:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale : Evolution du RMSD du residu 1 en fonction du temps","RMSD (A)","temps(ps)")
-        if cle==11:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 11 en fonction du temps","RMSD (A)","temps(ps)")
-        if cle==15:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 15(LYS) en fonction du temps","RMSD (A)","temps(ps)")
-        if cle==60:
-            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 60(LYS) en fonction du temps","RMSD (A)","temps(ps)")
+        
+        if cle==72:
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 72 en fonction du temps","RMSD (A)","temps(ps)")
+        if cle==42:
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 42 en fonction du temps","RMSD (A)","temps(ps)")
+        
         if cle==39:
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 39 en fonction du temps","RMSD (A)","temps(ps)")
         if cle==76:
             ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 76(GLU) en fonction du temps","RMSD (A)","temps(ps)")
             
-
+        if cle==38:
+            ST.graph(dico_RMSD["%s"%cle],list_temps,l2,"Analyse locale: Evolution du RMSD du residu 38(LYS) en fonction du temps","RMSD (A)","temps(ps)")
+       
+       
